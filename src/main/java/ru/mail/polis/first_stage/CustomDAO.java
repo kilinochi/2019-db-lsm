@@ -12,7 +12,7 @@ import java.util.concurrent.ConcurrentSkipListMap;
 
 public class CustomDAO implements DAO {
 
-    private NavigableMap <ByteBuffer, Record> cache = new ConcurrentSkipListMap<>();
+    private final NavigableMap <ByteBuffer, Record> cache = new ConcurrentSkipListMap<>();
     @NotNull
     @Override
     public Iterator<Record> iterator(@NotNull ByteBuffer from) throws IOException {
