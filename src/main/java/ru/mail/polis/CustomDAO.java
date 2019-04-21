@@ -1,32 +1,36 @@
-package ru.mail.polis.first_stage;
+package ru.mail.polis;
 
 import org.jetbrains.annotations.NotNull;
-import ru.mail.polis.DAO;
-import ru.mail.polis.Record;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.Iterator;
-import java.util.NavigableMap;
-import java.util.concurrent.ConcurrentSkipListMap;
 
 public class CustomDAO implements DAO {
 
-    private final NavigableMap <ByteBuffer, Record> cache = new ConcurrentSkipListMap<>();
+    private final MemTable memTable;
+    private final File data;
+
+    CustomDAO(File data) {
+        this.data = data;
+        memTable = MemTable.entity(data);
+    }
+
     @NotNull
     @Override
     public Iterator<Record> iterator(@NotNull ByteBuffer from) throws IOException {
-        return cache.tailMap(from).values().iterator();
+        return memTable.iterator(from);
     }
 
     @Override
     public void upsert(@NotNull ByteBuffer key, @NotNull ByteBuffer value) throws IOException {
-        cache.put(key, Record.of(key, value));
+        memTable.upsert(key, value);
     }
 
     @Override
     public void remove(@NotNull ByteBuffer key) throws IOException {
-        cache.remove(key);
+        memTable.remove(key);
     }
 
     @Override
