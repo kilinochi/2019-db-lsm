@@ -15,10 +15,9 @@ import static ru.mail.polis.DAOFactory.MAX_HEAP;
 class MemTable {
 
     private NavigableMap<ByteBuffer, Record> storage;
-    private File file;
     private static MemTable instance;
     private long tableSize;
-
+    private SSTable ssTable;
 
     static MemTable entity (File file) {
         MemTable localInstance = instance;
@@ -39,13 +38,14 @@ class MemTable {
     }
 
 
-    void upsert(@NotNull ByteBuffer key, @NotNull ByteBuffer value) throws IOException {
-        tableSize = tableSize + key.capacity() + value.capacity();
+    void upsert(@NotNull ByteBuffer key, Record value) throws IOException {
+        tableSize = tableSize + value.getValue().remaining();
         if(tableSize >= MAX_HEAP) {
-            //Todo - reset data to SSTable
+            ssTable.upsert(storage);
             storage.clear();
+            tableSize = 0;
         }
-        storage.put(key, Record.of(key, value));
+        storage.put(key, value);
     }
 
     void remove(@NotNull ByteBuffer key) throws IOException {
@@ -53,7 +53,7 @@ class MemTable {
     }
 
     private MemTable(File file) {
-        this.file = file;
+        ssTable = SSTable.entity(file);
         storage = new ConcurrentSkipListMap<>();
     }
 }

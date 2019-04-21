@@ -10,10 +10,8 @@ import java.util.Iterator;
 public class CustomDAO implements DAO {
 
     private final MemTable memTable;
-    private final File data;
 
     CustomDAO(File data) {
-        this.data = data;
         memTable = MemTable.entity(data);
     }
 
@@ -25,7 +23,7 @@ public class CustomDAO implements DAO {
 
     @Override
     public void upsert(@NotNull ByteBuffer key, @NotNull ByteBuffer value) throws IOException {
-        memTable.upsert(key, value);
+        memTable.upsert(key, Record.of(key, value));
     }
 
     @Override
