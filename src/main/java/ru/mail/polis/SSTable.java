@@ -37,7 +37,8 @@ class SSTable {
         outputStream.write(ByteBuffer.allocate(Long.BYTES).putLong(System.currentTimeMillis()).array());
         outputStream.write(intBuffer.putInt(storage.size()).array());
         intBuffer.clear();
-
-
+        /*Todo - write data (maybe with FileChannel?). Consider tombstone
+        *
+        * */
     }
 }
