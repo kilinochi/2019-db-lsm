@@ -17,6 +17,7 @@
 package ru.mail.polis;
 
 import org.jetbrains.annotations.NotNull;
+import ru.mail.polis.persistent.CustomDAO;
 
 import java.io.File;
 import java.io.IOException;
@@ -27,7 +28,7 @@ import java.io.IOException;
  * @author Vadim Tsesko
  */
 public final class DAOFactory {
-    static final long MAX_HEAP = 128 * 1024 * 1024;
+    public static final long MAX_HEAP = 128 * 1024 * 1024;
 
     private DAOFactory() {
         // Not instantiatable
