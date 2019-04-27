@@ -55,7 +55,7 @@ public class MemTable {
         else {
             tableSize = tableSize + value.remaining() - prev.getData().remaining();
         }
-        if (tableSize >= MAX_HEAP / 2) {
+        if (tableSize >= MAX_HEAP / 3) {
             ssTable.upsert(this.iterator(ByteBuffer.allocate(0)));
             storage = null;
             storage = new ConcurrentSkipListMap<>();
