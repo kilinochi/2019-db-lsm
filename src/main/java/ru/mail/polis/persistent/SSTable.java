@@ -35,7 +35,8 @@ class SSTable {
 
     public void upsert(Iterator <Cluster> clusters) throws IOException {
         try(FileChannel fileChannel = FileChannel.open(
-                file.toPath(), StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE)){
+                file.toPath(), StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE))
+        {
             final List<Long> offsets = new ArrayList<>();
             long offset = 0;
             while (clusters.hasNext()) {
