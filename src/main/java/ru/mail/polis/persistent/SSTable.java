@@ -14,26 +14,24 @@ import java.util.List;
 class SSTable {
 
     private static SSTable instance;
-    private final File file;
 
-    private SSTable(File file) {
-        this.file = file;
+    private SSTable() {
     }
 
-    public static SSTable entity (File file) {
+    public static SSTable entity () {
         SSTable localInstance = instance;
         if (localInstance == null) {
             synchronized (MemTable.class) {
                 localInstance = instance;
                 if (localInstance == null) {
-                    instance = localInstance = new SSTable(file);
+                    instance = localInstance = new SSTable();
                 }
             }
         }
         return localInstance;
     }
 
-    public void upsert(Iterator <Cluster> clusters) throws IOException {
+    public void upsert(Iterator <Cluster> clusters, File file) throws IOException {
         try(FileChannel fileChannel = FileChannel.open(
                 file.toPath(), StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE))
         {
