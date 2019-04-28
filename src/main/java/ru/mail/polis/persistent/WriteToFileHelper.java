@@ -13,7 +13,7 @@ import java.util.List;
 public class WriteToFileHelper {
 
     private static final String FILE_NAME = "SSTable_";
-    private static final String SUFFIX = ".tmp";
+    private static final String SUFFIX = ".txt";
 
     public static void writeToFile(Iterator<Cluster> clusters, File directory, long generation) throws IOException {
         try(FileChannel fileChannel = FileChannel.open(

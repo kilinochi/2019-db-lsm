@@ -7,9 +7,6 @@ import org.jetbrains.annotations.NotNull;
 import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Iterator;
 import java.util.NavigableMap;
 import java.util.concurrent.ConcurrentSkipListMap;
@@ -22,22 +19,14 @@ public class MemTable {
 
     private static AtomicLong counter = new AtomicLong(0);
     private NavigableMap<ByteBuffer, ClusterValue> storage;
-    private static MemTable instance;
     private long tableSize;
     private File directory;
 
-    public static MemTable entity (File file) {
-        MemTable localInstance = instance;
-        if (localInstance == null) {
-            synchronized (MemTable.class) {
-                localInstance = instance;
-                if (localInstance == null) {
-                    instance = localInstance = new MemTable(file);
-                }
-            }
-        }
-        return localInstance;
+    public MemTable(File directory) {
+        this.directory = directory;
+        storage = new ConcurrentSkipListMap<>();
     }
+
 
     @NotNull
     public Iterator<Cluster> iterator(@NotNull ByteBuffer from) throws IOException {
@@ -47,11 +36,6 @@ public class MemTable {
                     return new Cluster(e.getKey(), e.getValue());
                 }
         );
-    }
-
-    private MemTable(File file) {
-        this.directory = file;
-        storage = new ConcurrentSkipListMap<>();
     }
 
     public void upsert(@NotNull ByteBuffer key, ByteBuffer value) throws IOException {

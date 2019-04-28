@@ -4,26 +4,22 @@ import com.google.common.collect.Iterators;
 import org.jetbrains.annotations.NotNull;
 import ru.mail.polis.DAO;
 import ru.mail.polis.Record;
-import ru.mail.polis.persistent.Cluster;
-import ru.mail.polis.persistent.MemTable;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.nio.file.Files;
 import java.util.Iterator;
 
 public class CustomDAO implements DAO {
 
     private MemTable memTable;
-   // private final File base;
+    private final File base;
 
-    public CustomDAO(final File file) {
+    public CustomDAO(@NotNull final File file) throws IOException {
 
-       // this.base = file;
-       this.memTable = MemTable.entity(file);
-
-       // Files.walk(base.toPath(), 1).filter(path -> path.getFileName().toString().endsWith(SUFFIX)).;
+       this.base = file;
+       this.memTable = new MemTable(base);
+       //Files.walk(base.toPath(), 1).filter(path -> path.getFileName().toString().endsWith("txt"));
     }
 
 
