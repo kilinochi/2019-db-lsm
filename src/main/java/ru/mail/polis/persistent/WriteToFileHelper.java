@@ -15,9 +15,9 @@ public class WriteToFileHelper {
     private static final String FILE_NAME = "SSTable_";
     private static final String SUFFIX = ".tmp";
 
-    public static void writeToFile(Iterator<Cluster> clusters, File file) throws IOException {
+    public static void writeToFile(Iterator<Cluster> clusters, File directory, long generation) throws IOException {
         try(FileChannel fileChannel = FileChannel.open(
-                Path.of("temp.txt"), StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE))
+                Path.of(directory.getAbsolutePath(), FILE_NAME+generation+SUFFIX), StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE))
         {
             final List<Long> offsets = new ArrayList<>();
             long offset = 0;
