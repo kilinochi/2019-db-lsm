@@ -7,28 +7,24 @@ import org.jetbrains.annotations.NotNull;
 import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.NavigableMap;
 import java.util.concurrent.ConcurrentSkipListMap;
+import java.util.concurrent.atomic.AtomicLong;
 
 import static ru.mail.polis.DAOFactory.MAX_HEAP;
 
 
 public class MemTable {
 
-    public static final String SUFFIX = ".dat";
-    public static final String TEMP = ".tmp";
+    private static AtomicLong counter = new AtomicLong(0);
     private NavigableMap<ByteBuffer, ClusterValue> storage;
     private static MemTable instance;
     private long tableSize;
-    private SSTable ssTable;
-    private File base;
-    private int generation;
+    private File directory;
 
     public static MemTable entity (File file) {
         MemTable localInstance = instance;
@@ -53,6 +49,11 @@ public class MemTable {
         );
     }
 
+    private MemTable(File file) {
+        this.directory = file;
+        storage = new ConcurrentSkipListMap<>();
+    }
+
     public void upsert(@NotNull ByteBuffer key, ByteBuffer value) throws IOException {
         final ClusterValue prev = storage.put(key, ClusterValue.of(value));
         if(prev == null) {
@@ -65,11 +66,8 @@ public class MemTable {
             tableSize = tableSize + value.remaining() - prev.getData().remaining();
         }
         if (tableSize >= MAX_HEAP / 3) {
-            final File tmp = new File(base, generation + TEMP);
-            WriteToFileWrapper.writeToFile(this.iterator(ByteBuffer.allocate(0)), tmp);
-            final File dest = new File(base, generation + SUFFIX);
-            Files.move(tmp.toPath(), dest.toPath(), StandardCopyOption.ATOMIC_MOVE);
-            generation++;
+            long generation = counter.incrementAndGet();
+            WriteToFileHelper.writeToFile(this.iterator(ByteBuffer.allocate(0)), directory, generation);
             storage = null;
             storage = new ConcurrentSkipListMap<>();
             tableSize = 0;
@@ -84,17 +82,6 @@ public class MemTable {
 
         } else {
             tableSize -= prev.getData().remaining();
-        }
-    }
-
-    private MemTable(File file) {
-        this.base = file;
-        storage = new ConcurrentSkipListMap<>();
-        final Collection<Path> files = new ArrayList<>();
-        try {
-            Files.walk(file.toPath(), 1).filter(path -> path.getFileName().toString().endsWith(SUFFIX));
-        } catch (IOException e) {
-            e.printStackTrace();
         }
     }
 }

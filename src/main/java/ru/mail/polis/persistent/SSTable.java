@@ -43,17 +43,7 @@ class SSTable {
 
 
     public Iterator<Cluster> iterator(ByteBuffer from) {
-        return new Iterator<Cluster>() {
-            @Override
-            public boolean hasNext() {
-                return false;
-            }
-
-            @Override
-            public Cluster next() {
-                return null;
-            }
-        };
+      return null;
     }
 }
 

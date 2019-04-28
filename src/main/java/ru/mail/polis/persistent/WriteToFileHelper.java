@@ -4,16 +4,20 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
+import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-public class WriteToFileWrapper {
+public class WriteToFileHelper {
+
+    private static final String FILE_NAME = "SSTable_";
+    private static final String SUFFIX = ".tmp";
 
     public static void writeToFile(Iterator<Cluster> clusters, File file) throws IOException {
         try(FileChannel fileChannel = FileChannel.open(
-                file.toPath(), StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE))
+                Path.of("temp.txt"), StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE))
         {
             final List<Long> offsets = new ArrayList<>();
             long offset = 0;
@@ -61,5 +65,5 @@ public class WriteToFileWrapper {
             fileChannel.write(BytesWrapper.fromLong(offsets.size()));
         }
     }
-    private WriteToFileWrapper(){}
+    private WriteToFileHelper(){}
 }
