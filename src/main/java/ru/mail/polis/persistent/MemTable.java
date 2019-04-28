@@ -66,7 +66,7 @@ public class MemTable {
         }
         if (tableSize >= MAX_HEAP / 3) {
             final File tmp = new File(base, generation + TEMP);
-            ssTable.upsert(this.iterator(ByteBuffer.allocate(0)), tmp);
+            WriteToFileWrapper.writeToFile(this.iterator(ByteBuffer.allocate(0)), tmp);
             final File dest = new File(base, generation + SUFFIX);
             Files.move(tmp.toPath(), dest.toPath(), StandardCopyOption.ATOMIC_MOVE);
             generation++;
@@ -89,7 +89,6 @@ public class MemTable {
 
     private MemTable(File file) {
         this.base = file;
-        this.ssTable = SSTable.entity();
         storage = new ConcurrentSkipListMap<>();
         final Collection<Path> files = new ArrayList<>();
         try {

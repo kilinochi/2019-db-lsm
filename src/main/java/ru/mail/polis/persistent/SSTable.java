@@ -13,72 +13,24 @@ import java.util.List;
 
 class SSTable {
 
-    private static SSTable instance;
 
-    private SSTable() {
+    private SSTable(final File file) {
+
     }
 
-    public static SSTable entity () {
-        SSTable localInstance = instance;
-        if (localInstance == null) {
-            synchronized (MemTable.class) {
-                localInstance = instance;
-                if (localInstance == null) {
-                    instance = localInstance = new SSTable();
-                }
+
+    public Iterator<Cluster> iterator(ByteBuffer from) {
+        return new Iterator<Cluster>() {
+            @Override
+            public boolean hasNext() {
+                return false;
             }
-        }
-        return localInstance;
-    }
 
-    public void upsert(Iterator <Cluster> clusters, File file) throws IOException {
-        try(FileChannel fileChannel = FileChannel.open(
-                file.toPath(), StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE))
-        {
-            final List<Long> offsets = new ArrayList<>();
-            long offset = 0;
-            while (clusters.hasNext()) {
-                offsets.add(offset);
-
-                final Cluster cluster = clusters.next();
-
-                // Key
-                final ByteBuffer key = cluster.getKey();
-                final int keySize = cluster.getKey().remaining();
-                fileChannel.write(BytesWrapper.fromInt(keySize));
-                offset += Integer.BYTES;
-                fileChannel.write(key);
-                offset += keySize;
-
-                // Value
-                final ClusterValue value = cluster.getClusterValue();
-
-                // Timestamp
-                if (value.isTombstone()) {
-                    fileChannel.write(BytesWrapper.fromLong(-cluster.getClusterValue().getTimestamp()));
-                } else {
-                    fileChannel.write(BytesWrapper.fromLong(cluster.getClusterValue().getTimestamp()));
-                }
-                offset += Long.BYTES;
-
-                // Value
-
-                if (!value.isTombstone()) {
-                    final ByteBuffer valueData = value.getData();
-                    final int valueSize = value.getData().remaining();
-                    fileChannel.write(BytesWrapper.fromInt(valueSize));
-                    offset += Integer.BYTES;
-                    fileChannel.write(valueData);
-                    offset += valueSize;
-                }
+            @Override
+            public Cluster next() {
+                return null;
             }
-            // Offsets
-            for (final Long anOffset : offsets) {
-                fileChannel.write(BytesWrapper.fromLong(anOffset));
-            }
-            //Cells
-            fileChannel.write(BytesWrapper.fromLong(offsets.size()));
-        }
+        };
     }
 }
 
