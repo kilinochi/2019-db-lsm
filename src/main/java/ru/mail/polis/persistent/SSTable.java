@@ -1,6 +1,7 @@
 package ru.mail.polis.persistent;
 
 
+
 import java.io.*;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -9,14 +10,14 @@ import java.nio.channels.FileChannel;
 import java.nio.file.StandardOpenOption;
 import java.util.Iterator;
 
-class SSTable {
+public class SSTable {
 
     private final int rows;
     private final LongBuffer offsets;
     private final ByteBuffer cells;
 
 
-    private SSTable(final File file) throws IOException {
+    public SSTable(final File file) throws IOException {
         final long fileSize = file.length();
         final ByteBuffer mapped;
         try (
@@ -43,7 +44,77 @@ class SSTable {
 
 
     public Iterator<Cluster> iterator(ByteBuffer from) {
-      return null;
+        return new Iterator<Cluster>() {
+
+            int next = position(from);
+
+            @Override
+            public boolean hasNext() {
+                return next < rows;
+            }
+
+            @Override
+            public Cluster next() {
+                assert hasNext();
+                return clusterAt(next++);
+            }
+        };
+    }
+
+    private int position(final ByteBuffer from) {
+        int left = 0;
+        int right = rows - 1;
+        while (left <= right) {
+            final int mid = left + (right - left) / 2;
+            final int cmp = from.compareTo(keyAt(mid));
+            if (cmp < 0) {
+                right = mid - 1;
+            } else if (cmp > 0) {
+                left = mid - 1;
+            } else {
+                return mid;
+            }
+        }
+        return left;
+    }
+
+    private ByteBuffer keyAt(int i) {
+        assert 0 <= i && i < rows;
+        final long offset = offsets.get(i);
+        assert offset <= Integer.MAX_VALUE;
+        final int keySize = cells.getInt((int) offset);
+        final ByteBuffer key = cells.duplicate();
+        key.position((int) (offset + Integer.BYTES));
+        key.limit(key.position() + keySize);
+        return key.slice();
+    }
+    private Cluster clusterAt(final int i) {
+        assert 0 <= i && i < rows;
+        long offset = offsets.get(i);
+        assert offset <= Integer.MAX_VALUE;
+
+        //Key
+        final int keySize = cells.getInt((int) offset);
+        offset += Integer.BYTES;
+        final ByteBuffer key = cells.duplicate();
+        key.position((int) (offset + Integer.BYTES));
+        key.limit(key.position() + keySize);
+        offset += keySize;
+
+        //Timestamp
+        final long timeStamp = cells.getLong((int) offset);
+        offset += Long.BYTES;
+
+        if (timeStamp < 0) {
+            return new Cluster(key.slice(), new ClusterValue(null, -timeStamp, true));
+        } else {
+            final int valueSize = cells.getInt((int) offset);
+            offset += Integer.BYTES;
+            final ByteBuffer value = cells.duplicate();
+            value.position((int) offset);
+            value.limit(value.position() + valueSize);
+            return new Cluster(key.slice(), new ClusterValue(value.slice(), timeStamp, false));
+        }
     }
 }
 

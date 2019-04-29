@@ -27,7 +27,7 @@ public final class ClusterValue implements Comparable <ClusterValue> {
         return new ClusterValue(null, System.currentTimeMillis(), true);
     }
 
-    private ClusterValue(ByteBuffer data, long timestamp, boolean isDead) {
+    public ClusterValue(ByteBuffer data, long timestamp, boolean isDead) {
         this.data = data;
         this.timestamp = timestamp;
         this.tombstone = isDead;

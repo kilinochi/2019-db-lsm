@@ -8,18 +8,32 @@ import ru.mail.polis.Record;
 import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.file.FileVisitResult;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 
 public class CustomDAO implements DAO {
 
     private MemTable memTable;
-    private final File base;
+    private final File baseDirectory;
+    private List <SSTable> ssTables;
 
-    public CustomDAO(@NotNull final File file) throws IOException {
-
-       this.base = file;
-       this.memTable = new MemTable(base);
-       //Files.walk(base.toPath(), 1).filter(path -> path.getFileName().toString().endsWith("txt"));
+    public CustomDAO(@NotNull final File baseDirectory) throws IOException {
+        this.baseDirectory = baseDirectory;
+        this.memTable = new MemTable(this.baseDirectory);
+        this.ssTables = new ArrayList<>();
+        Files.walkFileTree(this.baseDirectory.toPath(), new SimpleFileVisitor<>(){
+            @Override
+            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                ssTables.add(new SSTable(file.toFile()));
+                return FileVisitResult.CONTINUE;
+            }
+        });
     }
 
 
