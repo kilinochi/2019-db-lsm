@@ -37,9 +37,9 @@ public class SSTable {
         this.offsets = offsetBuffer.slice().asLongBuffer();
 
         // Clusters
-        final ByteBuffer cellBuffer = mapped.duplicate();
-        cellBuffer.limit(offsetBuffer.position());
-        this.clusters = cellBuffer.slice();
+        final ByteBuffer clusterBuffer = mapped.duplicate();
+        clusterBuffer.limit(offsetBuffer.position());
+        this.clusters = clusterBuffer.slice();
     }
 
 
