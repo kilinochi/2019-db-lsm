@@ -14,7 +14,7 @@ public class SSTable {
 
     private final int rows;
     private final LongBuffer offsets;
-    private final ByteBuffer cells;
+    private final ByteBuffer clusters;
 
 
     public SSTable(final File file) throws IOException {
@@ -26,7 +26,7 @@ public class SSTable {
             mapped = fc.map(FileChannel.MapMode.READ_ONLY, 0L, fileSize).order(ByteOrder.BIG_ENDIAN);
         }
         // Rows
-        final long rowsValue = mapped.getLong((int) (fileSize - Long.BYTES));
+        final long rowsValue = mapped.getLong((int) (fileSize - Long.BYTES)); //fileSize - 8 byte
         assert rowsValue <= Integer.MAX_VALUE;
         this.rows = (int) rowsValue;
 
@@ -39,7 +39,7 @@ public class SSTable {
         // Cells
         final ByteBuffer cellBuffer = mapped.duplicate();
         cellBuffer.limit(offsetBuffer.position());
-        this.cells = cellBuffer.slice();
+        this.clusters = cellBuffer.slice();
     }
 
 
@@ -82,8 +82,8 @@ public class SSTable {
         assert 0 <= i && i < rows;
         final long offset = offsets.get(i);
         assert offset <= Integer.MAX_VALUE;
-        final int keySize = cells.getInt((int) offset);
-        final ByteBuffer key = cells.duplicate();
+        final int keySize = clusters.getInt((int) offset);
+        final ByteBuffer key = clusters.duplicate();
         key.position((int) (offset + Integer.BYTES));
         key.limit(key.position() + keySize);
         return key.slice();
@@ -94,23 +94,23 @@ public class SSTable {
         assert offset <= Integer.MAX_VALUE;
 
         //Key
-        final int keySize = cells.getInt((int) offset);
+        final int keySize = clusters.getInt((int) offset);
         offset += Integer.BYTES;
-        final ByteBuffer key = cells.duplicate();
+        final ByteBuffer key = clusters.duplicate();
         key.position((int) (offset + Integer.BYTES));
         key.limit(key.position() + keySize);
         offset += keySize;
 
         //Timestamp
-        final long timeStamp = cells.getLong((int) offset);
+        final long timeStamp = clusters.getLong((int) offset);
         offset += Long.BYTES;
 
         if (timeStamp < 0) {
             return new Cluster(key.slice(), new ClusterValue(null, -timeStamp, true));
         } else {
-            final int valueSize = cells.getInt((int) offset);
+            final int valueSize = clusters.getInt((int) offset);
             offset += Integer.BYTES;
-            final ByteBuffer value = cells.duplicate();
+            final ByteBuffer value = clusters.duplicate();
             value.position((int) offset);
             value.limit(value.position() + valueSize);
             return new Cluster(key.slice(), new ClusterValue(value.slice(), timeStamp, false));
