@@ -21,12 +21,12 @@ public class MemTable {
     private NavigableMap<ByteBuffer, ClusterValue> storage;
     private long tableSize;
     private File directory;
+    private long generation;
 
     public MemTable(File directory) {
         this.directory = directory;
         storage = new ConcurrentSkipListMap<>();
     }
-
 
     @NotNull
     public Iterator<Cluster> iterator(@NotNull ByteBuffer from) throws IOException {
@@ -50,12 +50,16 @@ public class MemTable {
             tableSize = tableSize + value.remaining() - prev.getData().remaining();
         }
         if (tableSize >= MAX_HEAP / 3) {
-            long generation = counter.incrementAndGet();
+            this.generation = counter.incrementAndGet();
             WriteToFileHelper.writeToFile(this.iterator(ByteBuffer.allocate(0)), directory, generation);
             storage = null;
             storage = new ConcurrentSkipListMap<>();
             tableSize = 0;
         }
+    }
+
+    public long getGeneration() {
+        return generation;
     }
 
     public void remove(@NotNull ByteBuffer key) throws IOException {

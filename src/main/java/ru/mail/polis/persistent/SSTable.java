@@ -2,6 +2,8 @@ package ru.mail.polis.persistent;
 
 
 
+import org.jetbrains.annotations.NotNull;
+
 import java.io.*;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -43,7 +45,7 @@ public class SSTable {
     }
 
 
-    public Iterator<Cluster> iterator(ByteBuffer from) {
+    public Iterator<Cluster> iterator(@NotNull final ByteBuffer from) {
         return new Iterator<Cluster>() {
 
             int next = position(from);
