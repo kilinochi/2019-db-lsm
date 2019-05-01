@@ -9,10 +9,8 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.Iterator;
 import java.util.NavigableMap;
-import java.util.concurrent.ConcurrentSkipListMap;
+import java.util.TreeMap;
 import java.util.concurrent.atomic.AtomicLong;
-
-import static ru.mail.polis.DAOFactory.MAX_HEAP;
 
 
 public class MemTable {
@@ -22,10 +20,12 @@ public class MemTable {
     private long tableSize;
     private File directory;
     private long generation;
+    private long flushLimit;
 
-    public MemTable(File directory) {
+    public MemTable(File directory, long flushLimit) {
         this.directory = directory;
-        storage = new ConcurrentSkipListMap<>();
+        this.flushLimit = flushLimit;
+        storage = new TreeMap<>();
     }
 
     @NotNull
@@ -49,11 +49,10 @@ public class MemTable {
         else {
             tableSize = tableSize + value.remaining() - prev.getData().remaining();
         }
-        if (tableSize >= MAX_HEAP / 3) {
+        if (tableSize >= flushLimit) {
             this.generation = counter.incrementAndGet();
             WriteToFileHelper.writeToFile(this.iterator(ByteBuffer.allocate(0)), directory, generation);
-            storage = null;
-            storage = new ConcurrentSkipListMap<>();
+            storage = new TreeMap<>();
             tableSize = 0;
         }
     }

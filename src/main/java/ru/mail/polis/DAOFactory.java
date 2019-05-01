@@ -28,7 +28,7 @@ import java.io.IOException;
  * @author Vadim Tsesko
  */
 public final class DAOFactory {
-    public static final long MAX_HEAP = 128 * 1024 * 1024;
+    static final long MAX_HEAP = 128 * 1024 * 1024;
 
     private DAOFactory() {
         // Not instantiatable
@@ -54,6 +54,6 @@ public final class DAOFactory {
             throw new IllegalArgumentException("Path is not a directory: " + data);
         }
 
-       return new CustomDAO(data);
+       return new CustomDAO(data, MAX_HEAP / 3);
     }
 }

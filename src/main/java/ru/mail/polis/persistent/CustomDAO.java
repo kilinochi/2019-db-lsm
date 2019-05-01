@@ -24,9 +24,9 @@ public class CustomDAO implements DAO {
     private final File baseDirectory;
     private List <SSTable> ssTables;
 
-    public CustomDAO(@NotNull final File baseDirectory) throws IOException {
+    public CustomDAO(@NotNull final File baseDirectory, long flushLimit) throws IOException {
         this.baseDirectory = baseDirectory;
-        this.memTable = new MemTable(this.baseDirectory);
+        this.memTable = new MemTable(this.baseDirectory, flushLimit);
         this.ssTables = new ArrayList<>();
         Files.walkFileTree(this.baseDirectory.toPath(), new SimpleFileVisitor<>(){
             @Override
