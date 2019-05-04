@@ -10,7 +10,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-public class WriteToFileHelper {
+public final class WriteToFileHelper {
 
     private static final String FILE_NAME = "SSTable_";
     private static final String SUFFIX = ".txt";
@@ -31,7 +31,8 @@ public class WriteToFileHelper {
                 final int keySize = cluster.getKey().remaining();
                 fileChannel.write(BytesWrapper.fromInt(keySize));
                 offset += Integer.BYTES; // 4 byte
-                fileChannel.write(key);
+                ByteBuffer keyDuplicate = key.duplicate();
+                fileChannel.write(keyDuplicate);
                 offset += keySize;
 
                 // Value

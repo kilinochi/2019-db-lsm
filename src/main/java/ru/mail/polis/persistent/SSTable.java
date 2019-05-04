@@ -68,7 +68,8 @@ public class SSTable {
         int right = rows - 1;
         while (left <= right) {
             final int mid = left + (right - left) / 2;
-            final int cmp = from.compareTo(keyAt(mid));
+            final ByteBuffer keyAt = keyAt(mid);
+            final int cmp = from.compareTo(keyAt);
             if (cmp < 0) {
                 right = mid - 1;
             } else if (cmp > 0) {
