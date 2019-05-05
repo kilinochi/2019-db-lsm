@@ -15,7 +15,7 @@ public final class ClusterValue implements Comparable <ClusterValue> {
         return timestamp;
     }
 
-    public ByteBuffer getValue() {
+    public ByteBuffer getData() {
         return data.asReadOnlyBuffer();
     }
 
@@ -23,8 +23,8 @@ public final class ClusterValue implements Comparable <ClusterValue> {
         return new ClusterValue(data, System.currentTimeMillis(), false);
     }
 
-    public static ClusterValue deadClusterValue() {
-        return new ClusterValue(ByteBuffer.allocate(0), System.currentTimeMillis(), true);
+    public static ClusterValue deadCluster() {
+        return new ClusterValue(null, System.currentTimeMillis(), true);
     }
 
     public ClusterValue(ByteBuffer data, long timestamp, boolean isDead) {
@@ -37,20 +37,8 @@ public final class ClusterValue implements Comparable <ClusterValue> {
         return tombstone;
     }
 
-
-    public int size(){
-        if(tombstone) {
-            return Long.BYTES;
-        }
-        else {
-            return Long.BYTES + Integer.BYTES + data.remaining();
-        }
-    }
-
-
-
     @Override
     public int compareTo(@NotNull ClusterValue o) {
-        return Long.compare(timestamp, o.timestamp);
+        return -Long.compare(timestamp, o.timestamp);
     }
 }
