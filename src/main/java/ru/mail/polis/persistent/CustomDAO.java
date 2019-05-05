@@ -37,55 +37,28 @@ public class CustomDAO implements DAO {
         });
     }
 
-    private Iterator<Record> ssTablesIterator(@NotNull ByteBuffer from) {
-        final List <Iterator<Cluster>> sstablesListIter = new ArrayList<>();
-        for (SSTable ssTable : ssTables) {
-            sstablesListIter.add(ssTable.iterator(from));
-        }
-        final Iterator <Cluster> sstablesIter = Iterators.mergeSorted(sstablesListIter, Cluster.COMPARATOR);
-        final Iterator <Cluster> sstableCollapseIter = Iters.collapseEquals(sstablesIter, Cluster::getKey);
-
-        final Iterator <Cluster> aliveClusters = Iterators.filter(sstableCollapseIter, cluster-> {
-            assert  cluster != null;
-            return !cluster.getClusterValue().isTombstone();
-        });
-        return Iterators.transform(aliveClusters, cluster->{
-            assert  cluster != null;
-            return Record.of(cluster.getKey(), cluster.getClusterValue().getData());
-        });
-    }
-
-    private Iterator<Record> memTableIterator(@NotNull ByteBuffer from) throws IOException {
-        /*
-         * Get Alive Clusters form MemTable
-         * */
-        final Iterator <Cluster> clusters = memTable.iterator(from);
-        final Iterator <Cluster> aliveClusters = Iterators.filter(clusters, cluster -> {
-            assert cluster != null;
-            return !cluster.getClusterValue().isTombstone();
-        });
-        return Iterators.transform(aliveClusters, cluster -> {
-            assert cluster != null;
-            return Record.of(cluster.getKey(), cluster.getClusterValue().getData());
-        });
-    }
 
     @NotNull
     @Override
     public Iterator<Record> iterator(@NotNull ByteBuffer from) throws IOException {
-        final Iterator <Record> memtableIter = memTableIterator(from);
-        final Iterator <Record> sstablesIter = ssTablesIterator(from);
-        final List <Iterator<Record>> iteratorList = new ArrayList<>();
-        iteratorList.add(memtableIter);
-        iteratorList.add(sstablesIter);
-        final Iterator <Record> iterator = Iterators.mergeSorted(iteratorList, Record::compareTo);
-        final Iterator <Record> collapseEqualsIter = Iters.collapseEquals(iterator, Record::getKey);
-        return collapseEqualsIter;
+        final List <Iterator<Cluster>> list = new ArrayList<>();
+        ssTables.forEach(ssTable -> list.add(ssTable.iterator(from)));
+        final Iterator<Cluster> memIter = memTable.iterator(from);
+        list.add(memIter);
+        Iterator <Cluster> clusterIterator = Iterators.mergeSorted(list, Cluster.COMPARATOR);
+        clusterIterator = Iters.collapseEquals(clusterIterator, Cluster::getKey);
+        final Iterator <Cluster> alive = Iterators.filter(
+                clusterIterator, cluster-> cluster == null || cluster.getClusterValue() == null
+                || !cluster.getClusterValue().isTombstone());
+        return Iterators.transform(alive, cluster-> {
+            assert  cluster != null && cluster.getKey() != null;
+            return Record.of(cluster.getKey(), cluster.getClusterValue().getValue());
+        });
     }
 
     @Override
     public void upsert(@NotNull ByteBuffer key, @NotNull ByteBuffer value) throws IOException {
-        memTable.upsert(key, value);
+        memTable.upsert(key.duplicate(), value);
     }
 
     @Override
@@ -95,6 +68,6 @@ public class CustomDAO implements DAO {
 
     @Override
     public void close() throws IOException {
-        WriteToFileHelper.writeToFile(memTable.iterator(ByteBuffer.allocate(0)), baseDirectory, memTable.getGeneration());
+        //WriteToFileHelper.writeToFile(memTable.iterator(ByteBuffer.allocate(0)), baseDirectory, memTable.getGeneration());
     }
 }

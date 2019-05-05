@@ -49,8 +49,8 @@ public final class WriteToFileHelper {
                 // Write Value Size and Value
 
                 if (!value.isTombstone()) {
-                    final ByteBuffer valueData = value.getData();
-                    final int valueSize = value.getData().remaining();
+                    final ByteBuffer valueData = value.getValue();
+                    final int valueSize = value.getValue().remaining();
                     fileChannel.write(BytesWrapper.fromInt(valueSize));
                     offset += Integer.BYTES; // 4 byte
                     fileChannel.write(valueData);
@@ -66,5 +66,4 @@ public final class WriteToFileHelper {
             fileChannel.write(BytesWrapper.fromLong(offsets.size()));
         }
     }
-    private WriteToFileHelper(){}
 }

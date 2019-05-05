@@ -22,4 +22,16 @@ public class Cluster {
     public ClusterValue getClusterValue() {
         return clusterValue;
     }
+
+    public static Cluster of(ByteBuffer key, ByteBuffer value) {
+        return new Cluster(key,ClusterValue.of(value));
+    }
+
+    public static Cluster tombstoneCluster(ByteBuffer key) {
+        return new Cluster(key, ClusterValue.deadClusterValue());
+    }
+
+    public int size() {
+        return Integer.BYTES + key.remaining() + clusterValue.size();
+    }
 }

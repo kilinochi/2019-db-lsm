@@ -1,16 +1,18 @@
 package ru.mail.polis.persistent;
 
 
-
+import com.google.common.collect.Iterators;
 import org.jetbrains.annotations.NotNull;
+import ru.mail.polis.Iters;
 
 import java.io.*;
 import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
 import java.nio.LongBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.file.StandardOpenOption;
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 
 public class SSTable {
 
@@ -21,12 +23,15 @@ public class SSTable {
 
     public SSTable(final File file) throws IOException {
         final long fileSize = file.length();
-        final ByteBuffer mapped;
+//        final ByteBuffer mapped;
+        final ByteBuffer mapped = ByteBuffer.allocate((int) fileSize * Integer.BYTES);
         try (
                 FileChannel fc = FileChannel.open(file.toPath(), StandardOpenOption.READ)) {
             assert fileSize <= Integer.MAX_VALUE;
-            mapped = fc.map(FileChannel.MapMode.READ_ONLY, 0L, fileSize).order(ByteOrder.BIG_ENDIAN);
+//            mapped = fc.map(FileChannel.MapMode.READ_ONLY, 0L, fileSize).order(ByteOrder.BIG_ENDIAN);
+            fc.read(mapped);
         }
+        int limit = mapped.limit();
         // Rows
         final long rowsValue = mapped.getLong((int) (fileSize - Long.BYTES)); //fileSize - 8 byte
         assert rowsValue <= Integer.MAX_VALUE;
@@ -34,8 +39,8 @@ public class SSTable {
 
         // Offset
         final ByteBuffer offsetBuffer = mapped.duplicate();
-        offsetBuffer.position(mapped.limit() - Long.BYTES * rows - Long.BYTES);
-        offsetBuffer.limit(mapped.limit() - Long.BYTES);
+        offsetBuffer.position(limit - Long.BYTES * rows - Long.BYTES);
+        offsetBuffer.limit(limit - Long.BYTES);
         this.offsets = offsetBuffer.slice().asLongBuffer();
 
         // Clusters
@@ -63,6 +68,23 @@ public class SSTable {
         };
     }
 
+    static Iterator<Cluster> merge(List<SSTable> tableList) {
+        List<Iterator<Cluster>> iteratorList = new ArrayList<>(tableList.size());
+        tableList.forEach(table -> {
+            iteratorList.add(table.iterator(ByteBuffer.allocate(0)));
+        });
+        Iterator<Cluster> iter = Iterators.mergeSorted(iteratorList, Cluster.COMPARATOR);
+        iter = Iters.collapseEquals(iter);
+        return iter;
+    }
+
+    static Iterator<Cluster> merge(SSTable ssTable, SSTable ssTable1) {
+        List<SSTable> list = new ArrayList<>();
+        list.add(ssTable);
+        list.add(ssTable1);
+        return merge(list);
+    }
+
     private int position(final ByteBuffer from) {
         int left = 0;
         int right = rows - 1;
@@ -73,7 +95,7 @@ public class SSTable {
             if (cmp < 0) {
                 right = mid - 1;
             } else if (cmp > 0) {
-                left = mid - 1;
+                left = mid + 1;
             } else {
                 return mid;
             }
@@ -91,6 +113,7 @@ public class SSTable {
         key.limit(key.position() + keySize);
         return key.slice();
     }
+
     private Cluster clusterAt(final int i) {
         assert 0 <= i && i < rows;
         long offset = offsets.get(i);
