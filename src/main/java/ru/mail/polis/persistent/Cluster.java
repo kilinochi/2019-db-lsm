@@ -14,7 +14,7 @@ public class Cluster {
     private final ByteBuffer key;
     private final ClusterValue clusterValue;
 
-    Cluster(@NotNull final ByteBuffer key, @NotNull final ClusterValue clusterValue) {
+    public Cluster(@NotNull final ByteBuffer key, @NotNull final ClusterValue clusterValue) {
         this.key = key;
         this.clusterValue = clusterValue;
     }

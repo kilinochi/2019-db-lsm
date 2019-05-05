@@ -19,7 +19,7 @@ public class MemTable {
         storage = new TreeMap<>();
     }
 
-    final Iterator<Cluster> iterator(@NotNull final ByteBuffer from) {
+    public final Iterator<Cluster> iterator(@NotNull final ByteBuffer from) {
         return Iterators.transform(storage.tailMap(from)
                         .entrySet().iterator(),
                 e -> {
