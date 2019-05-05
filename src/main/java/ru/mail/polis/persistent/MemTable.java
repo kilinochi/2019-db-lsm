@@ -1,6 +1,5 @@
 package ru.mail.polis.persistent;
 
-
 import com.google.common.collect.Iterators;
 import org.jetbrains.annotations.NotNull;
 
@@ -13,7 +12,7 @@ import java.util.TreeMap;
 public class MemTable {
 
 
-    private NavigableMap<ByteBuffer, ClusterValue> storage;
+    private final NavigableMap<ByteBuffer, ClusterValue> storage;
     private long tableSize;
 
     public MemTable() {
@@ -29,6 +28,12 @@ public class MemTable {
                 });
     }
 
+    /**
+    *insert new Value to storage
+    * @param key is the label which we can find data
+    * @param value is the data
+    */
+
     public void upsert(@NotNull final ByteBuffer key, @NotNull final ByteBuffer value) {
         final ClusterValue prev = storage.put(key, ClusterValue.of(value));
         if (prev == null) {
@@ -39,6 +44,12 @@ public class MemTable {
             tableSize = tableSize + value.remaining() - prev.getData().remaining();
         }
     }
+
+    /**
+     *delete Value from storage by key
+     * @param key is the label which we can find data
+     *            and delete data from storage
+     */
 
     public void remove(@NotNull final ByteBuffer key) {
         final ClusterValue prev = storage.put(key, ClusterValue.deadCluster());

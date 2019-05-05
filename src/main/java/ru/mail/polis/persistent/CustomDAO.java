@@ -9,7 +9,9 @@ import ru.mail.polis.Record;
 import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.nio.file.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
@@ -26,6 +28,12 @@ public class CustomDAO implements DAO {
     private final Collection<Path> files;
     private int generation;
 
+    /**
+     * Creates persistence CustomDAO
+     *
+     * @param flushLimit is the limit upon reaching which we write data in disk
+     * @param directory is the base directory, where contains our database
+     * @throws IOException of an I/O error occurred*/
 
     public CustomDAO(@NotNull final File directory, final long flushLimit) throws IOException {
         this.directory = directory;
@@ -44,8 +52,7 @@ public class CustomDAO implements DAO {
     public Iterator<Record> iterator(@NotNull final ByteBuffer from) throws IOException {
         final List<Iterator<Cluster>> iters = new ArrayList<>();
         for (final Path path : this.files) {
-            SSTable ssTable = new SSTable(path.toFile());
-            iters.add(ssTable.iterator(from));
+            iters.add(new SSTable(path.toFile()).iterator(from));
         }
 
         iters.add(memTable.iterator(from));
@@ -68,7 +75,7 @@ public class CustomDAO implements DAO {
     @Override
     public void upsert(@NotNull final ByteBuffer key, @NotNull final ByteBuffer value) throws IOException {
         memTable.upsert(key, value);
-        if (memTable.size() > flushLimit) {
+        if (memTable.size() >= flushLimit) {
             flush();
         }
     }
@@ -76,7 +83,7 @@ public class CustomDAO implements DAO {
     @Override
     public void remove(@NotNull final ByteBuffer key) throws IOException {
         memTable.remove(key);
-        if (memTable.size() > flushLimit) {
+        if (memTable.size() >= flushLimit) {
             flush();
         }
     }

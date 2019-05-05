@@ -2,7 +2,7 @@ package ru.mail.polis.persistent;
 
 import java.nio.ByteBuffer;
 
-public class BytesWrapper {
+public final class BytesWrapper {
     private BytesWrapper() {
     }
 

@@ -1,9 +1,9 @@
 package ru.mail.polis.persistent;
 
-
 import org.jetbrains.annotations.NotNull;
 
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.LongBuffer;
@@ -20,7 +20,14 @@ public class SSTable {
     private final ByteBuffer clusters;
 
 
-    public static void writeToFile(Iterator<Cluster> clusters, File to) throws IOException {
+    /**
+     * write data as iterator in disk
+     * @param clusters is the data, which we want to write
+     * @param to is the file in the directory in which we want
+     *           write data
+     */
+
+    public static void writeToFile(@NotNull final Iterator<Cluster> clusters, @NotNull final File to) throws IOException {
         try (FileChannel fileChannel = FileChannel.open(
                 to.toPath(), StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE)) {
             final List<Long> offsets = new ArrayList<>();
@@ -35,7 +42,7 @@ public class SSTable {
                 final int keySize = cluster.getKey().remaining();
                 fileChannel.write(BytesWrapper.fromInt(keySize));
                 offset += Integer.BYTES; // 4 byte
-                ByteBuffer keyDuplicate = key.duplicate();
+                final ByteBuffer keyDuplicate = key.duplicate();
                 fileChannel.write(keyDuplicate);
                 offset += keySize;
 
@@ -71,8 +78,12 @@ public class SSTable {
         }
     }
 
+    /**
+     * file mapping from disk
+     * @param file is the file from which we read data
+     */
 
-    public SSTable(final File file) throws IOException {
+    public SSTable(@NotNull final File file) throws IOException {
         final long fileSize = file.length();
         final ByteBuffer mapped;
         try (
@@ -97,6 +108,12 @@ public class SSTable {
         this.clusters = clusterBuffer.slice();
     }
 
+    /**
+     * Iterator of data from file
+     * @param from is the key, which help to find necessary
+     *             clusters of data
+     */
+
 
     public Iterator<Cluster> iterator(@NotNull final ByteBuffer from) {
         return new Iterator<Cluster>() {
@@ -116,7 +133,7 @@ public class SSTable {
         };
     }
 
-    private int position(final ByteBuffer from) {
+    private int position(final @NotNull ByteBuffer from) {
         int left = 0;
         int right = rows - 1;
         while (left <= right) {
@@ -134,7 +151,7 @@ public class SSTable {
         return left;
     }
 
-    private ByteBuffer keyAt(int i) {
+    private ByteBuffer keyAt(final int i) {
         assert 0 <= i && i < rows;
         final long offset = offsets.get(i);
         assert offset <= Integer.MAX_VALUE;

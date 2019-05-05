@@ -1,6 +1,5 @@
 package ru.mail.polis.persistent;
 
-
 import org.jetbrains.annotations.NotNull;
 
 import java.nio.ByteBuffer;
@@ -27,7 +26,7 @@ public final class ClusterValue implements Comparable<ClusterValue> {
         return new ClusterValue(null, System.currentTimeMillis(), true);
     }
 
-    ClusterValue(ByteBuffer data, long timestamp, boolean isDead) {
+    ClusterValue(final ByteBuffer data, final long timestamp, final boolean isDead) {
         this.data = data;
         this.timestamp = timestamp;
         this.tombstone = isDead;
@@ -38,7 +37,7 @@ public final class ClusterValue implements Comparable<ClusterValue> {
     }
 
     @Override
-    public int compareTo(@NotNull ClusterValue o) {
+    public int compareTo(@NotNull final ClusterValue o) {
         return -Long.compare(timestamp, o.timestamp);
     }
 }
