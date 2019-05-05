@@ -27,7 +27,8 @@ public class SSTable {
      *           write data
      */
 
-    public static void writeToFile(@NotNull final Iterator<Cluster> clusters, @NotNull final File to) throws IOException {
+    public static void writeToFile(@NotNull final Iterator<Cluster> clusters, @NotNull final File to)
+            throws IOException {
         try (FileChannel fileChannel = FileChannel.open(
                 to.toPath(), StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE)) {
             final List<Long> offsets = new ArrayList<>();
@@ -110,6 +111,7 @@ public class SSTable {
 
     /**
      * Iterator of data from file
+     *
      * @param from is the key, which help to find necessary
      *             clusters of data
      */
@@ -138,8 +140,7 @@ public class SSTable {
         int right = rows - 1;
         while (left <= right) {
             final int mid = left + (right - left) / 2;
-            final ByteBuffer keyAt = keyAt(mid);
-            final int cmp = from.compareTo(keyAt);
+            final int cmp = keyAt(mid).compareTo(from);
             if (cmp < 0) {
                 right = mid + 1;
             } else if (cmp > 0) {
@@ -171,7 +172,7 @@ public class SSTable {
         final int keySize = clusters.getInt((int) offset);
         offset += Integer.BYTES;
         final ByteBuffer key = clusters.duplicate();
-        key.position((int) (offset + Integer.BYTES));
+        key.position((int) (offset));
         key.limit(key.position() + keySize);
         offset += keySize;
 
@@ -186,7 +187,9 @@ public class SSTable {
             offset += Integer.BYTES;
             final ByteBuffer value = clusters.duplicate();
             value.position((int) offset);
-            value.limit(value.position() + valueSize);
+            value.limit(value.position() + valueSize)
+                    .position((int) offset)
+                    .limit((int) (offset + valueSize));
             return new Cluster(key.slice(), new ClusterValue(value.slice(), timeStamp, false));
         }
     }
