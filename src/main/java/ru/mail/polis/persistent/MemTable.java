@@ -22,7 +22,7 @@ public class MemTable {
 
     final Iterator <Cluster> iterator (ByteBuffer from) {
         return Iterators.transform(storage.tailMap(from)
-                        .entrySet().iterator(),
+        .entrySet().iterator(),
                 e-> {
                     assert e != null;
                     return new Cluster(e.getKey(), e.getValue());

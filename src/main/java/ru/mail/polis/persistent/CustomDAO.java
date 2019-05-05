@@ -28,14 +28,14 @@ public class CustomDAO implements DAO {
 
 
     public CustomDAO(final File directory, final long flushLimit) throws IOException {
-        this.directory = directory;
-        assert flushLimit >= 0L;
-        this.flushLimit = flushLimit;
-        memTable = new MemTable();
-        files = new ArrayList<>();
-        Files.walk(directory.toPath(), 1)
-                .filter(path-> path.getFileName().toString().endsWith(SUFFIX_DAT))
-                .forEach(files::add);
+       this.directory = directory;
+       assert flushLimit >= 0L;
+       this.flushLimit = flushLimit;
+       memTable = new MemTable();
+       files = new ArrayList<>();
+       Files.walk(directory.toPath(), 1)
+               .filter(path-> path.getFileName().toString().endsWith(SUFFIX_DAT))
+               .forEach(files::add);
     }
 
 
