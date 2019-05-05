@@ -71,7 +71,7 @@ public class SSTable {
             final ByteBuffer keyAt = keyAt(mid);
             final int cmp = from.compareTo(keyAt);
             if (cmp < 0) {
-                right = mid - 1;
+                right = mid + 1;
             } else if (cmp > 0) {
                 left = mid - 1;
             } else {
