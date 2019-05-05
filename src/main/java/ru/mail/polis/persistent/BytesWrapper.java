@@ -3,7 +3,9 @@ package ru.mail.polis.persistent;
 import java.nio.ByteBuffer;
 
 public class BytesWrapper {
-    private BytesWrapper(){}
+    private BytesWrapper() {
+    }
+
     static ByteBuffer fromInt(final int value) {
         final ByteBuffer result = ByteBuffer.allocate(Integer.BYTES);
         result.putInt(value);

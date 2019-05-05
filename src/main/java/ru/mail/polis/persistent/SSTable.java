@@ -1,7 +1,6 @@
 package ru.mail.polis.persistent;
 
 
-
 import org.jetbrains.annotations.NotNull;
 
 import java.io.*;
@@ -21,10 +20,9 @@ public class SSTable {
     private final ByteBuffer clusters;
 
 
-    public static void writeToFile(Iterator <Cluster> clusters, File to) throws IOException {
-        try(FileChannel fileChannel = FileChannel.open(
-                to.toPath(), StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE))
-        {
+    public static void writeToFile(Iterator<Cluster> clusters, File to) throws IOException {
+        try (FileChannel fileChannel = FileChannel.open(
+                to.toPath(), StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE)) {
             final List<Long> offsets = new ArrayList<>();
             long offset = 0;
             while (clusters.hasNext()) {
@@ -146,6 +144,7 @@ public class SSTable {
         key.limit(key.position() + keySize);
         return key.slice();
     }
+
     private Cluster clusterAt(final int i) {
         assert 0 <= i && i < rows;
         long offset = offsets.get(i);

@@ -17,8 +17,8 @@ import java.util.List;
 
 public class CustomDAO implements DAO {
 
-    public static final String SUFFIX_DAT = ".dat";
-    public static final String SUFFIX_TMP = ".tmp";
+    private static final String SUFFIX_DAT = ".dat";
+    private static final String SUFFIX_TMP = ".tmp";
 
     private final File directory;
     private final long flushLimit;
@@ -27,56 +27,56 @@ public class CustomDAO implements DAO {
     private int generation;
 
 
-    public CustomDAO(final File directory, final long flushLimit) throws IOException {
+    public CustomDAO(@NotNull final File directory, final long flushLimit) throws IOException {
         this.directory = directory;
         assert flushLimit >= 0L;
         this.flushLimit = flushLimit;
         memTable = new MemTable();
         files = new ArrayList<>();
         Files.walk(directory.toPath(), 1)
-                .filter(path-> path.getFileName().toString().endsWith(SUFFIX_DAT))
+                .filter(path -> path.getFileName().toString().endsWith(SUFFIX_DAT))
                 .forEach(files::add);
     }
 
 
     @NotNull
     @Override
-    public Iterator<Record> iterator(@NotNull ByteBuffer from) throws IOException {
-        final List <Iterator <Cluster>> iters = new ArrayList<>();
-        for(final Path path : this.files) {
+    public Iterator<Record> iterator(@NotNull final ByteBuffer from) throws IOException {
+        final List<Iterator<Cluster>> iters = new ArrayList<>();
+        for (final Path path : this.files) {
             SSTable ssTable = new SSTable(path.toFile());
             iters.add(ssTable.iterator(from));
         }
 
         iters.add(memTable.iterator(from));
-        final Iterator <Cluster> clusterIterator = Iters.collapseEquals(
+        final Iterator<Cluster> clusterIterator = Iters.collapseEquals(
                 Iterators.mergeSorted(iters, Cluster.COMPARATOR),
                 Cluster::getKey
         );
-        final Iterator <Cluster> alive = Iterators.filter(
-                clusterIterator, cluster-> {
+        final Iterator<Cluster> alive = Iterators.filter(
+                clusterIterator, cluster -> {
                     assert cluster != null;
                     return !cluster.getClusterValue().isTombstone();
                 }
         );
-        return Iterators.transform(alive, cluster-> {
+        return Iterators.transform(alive, cluster -> {
             assert cluster != null;
             return Record.of(cluster.getKey(), cluster.getClusterValue().getData());
         });
     }
 
     @Override
-    public void upsert(@NotNull ByteBuffer key, @NotNull ByteBuffer value) throws IOException {
+    public void upsert(@NotNull final ByteBuffer key, @NotNull final ByteBuffer value) throws IOException {
         memTable.upsert(key, value);
-        if(memTable.size() > flushLimit) {
+        if (memTable.size() > flushLimit) {
             flush();
         }
     }
 
     @Override
-    public void remove(@NotNull ByteBuffer key) throws IOException {
+    public void remove(@NotNull final ByteBuffer key) throws IOException {
         memTable.remove(key);
-        if(memTable.size() > flushLimit) {
+        if (memTable.size() > flushLimit) {
             flush();
         }
     }

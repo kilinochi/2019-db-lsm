@@ -5,35 +5,35 @@ import org.jetbrains.annotations.NotNull;
 
 import java.nio.ByteBuffer;
 
-public final class ClusterValue implements Comparable <ClusterValue> {
+public final class ClusterValue implements Comparable<ClusterValue> {
 
     private final ByteBuffer data;
     private final long timestamp;
     private final boolean tombstone;
 
-    public long getTimestamp() {
+    long getTimestamp() {
         return timestamp;
     }
 
-    public ByteBuffer getData() {
+    ByteBuffer getData() {
         return data.asReadOnlyBuffer();
     }
 
-    public static ClusterValue of(final ByteBuffer data) {
+    public static ClusterValue of(@NotNull final ByteBuffer data) {
         return new ClusterValue(data, System.currentTimeMillis(), false);
     }
 
-    public static ClusterValue deadCluster() {
+    static ClusterValue deadCluster() {
         return new ClusterValue(null, System.currentTimeMillis(), true);
     }
 
-    public ClusterValue(ByteBuffer data, long timestamp, boolean isDead) {
+    ClusterValue(ByteBuffer data, long timestamp, boolean isDead) {
         this.data = data;
         this.timestamp = timestamp;
         this.tombstone = isDead;
     }
 
-    public boolean isTombstone() {
+    boolean isTombstone() {
         return tombstone;
     }
 

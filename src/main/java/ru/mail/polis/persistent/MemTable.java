@@ -20,33 +20,31 @@ public class MemTable {
         storage = new TreeMap<>();
     }
 
-    final Iterator <Cluster> iterator (ByteBuffer from) {
+    final Iterator<Cluster> iterator(@NotNull final ByteBuffer from) {
         return Iterators.transform(storage.tailMap(from)
                         .entrySet().iterator(),
-                e-> {
+                e -> {
                     assert e != null;
                     return new Cluster(e.getKey(), e.getValue());
                 });
     }
 
-    public void upsert(ByteBuffer key, ByteBuffer value) {
+    public void upsert(@NotNull final ByteBuffer key, @NotNull final ByteBuffer value) {
         final ClusterValue prev = storage.put(key, ClusterValue.of(value));
-        if(prev == null) {
+        if (prev == null) {
             tableSize = tableSize + key.remaining() + value.remaining();
-        }
-        else if(prev.isTombstone()) {
+        } else if (prev.isTombstone()) {
             tableSize = tableSize + value.remaining();
-        }
-        else {
+        } else {
             tableSize = tableSize + value.remaining() - prev.getData().remaining();
         }
     }
 
-    public void remove(@NotNull ByteBuffer key) {
+    public void remove(@NotNull final ByteBuffer key) {
         final ClusterValue prev = storage.put(key, ClusterValue.deadCluster());
-        if(prev == null) {
+        if (prev == null) {
             tableSize = tableSize + key.remaining();
-        } else if(!prev.isTombstone()) {
+        } else if (!prev.isTombstone()) {
             tableSize = tableSize - prev.getData().remaining();
         }
     }
