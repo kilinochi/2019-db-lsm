@@ -19,6 +19,12 @@ public class MemTable {
         storage = new TreeMap<>();
     }
 
+    /**
+     * Get data as Iterator from in-memory storage by key.
+     * @param from is the label which we can find data
+     *
+     **/
+
     public final Iterator<Cluster> iterator(@NotNull final ByteBuffer from) {
         return Iterators.transform(storage.tailMap(from)
                         .entrySet().iterator(),

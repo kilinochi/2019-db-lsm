@@ -21,7 +21,7 @@ public class SSTable {
 
 
     /**
-     * write data as iterator in disk
+     * Write data as iterator in disk.
      * @param clusters is the data, which we want to write
      * @param to is the file in the directory in which we want
      *           write data
