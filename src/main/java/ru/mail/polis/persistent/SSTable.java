@@ -80,9 +80,9 @@ public class SSTable {
     }
 
     /**
-     * file mapping from disk
+     * File mapping from disk.
      * @param file is the file from which we read data
-     */
+     **/
 
     public SSTable(@NotNull final File file) throws IOException {
         final long fileSize = file.length();
@@ -114,7 +114,7 @@ public class SSTable {
      *
      * @param from is the key, which help to find necessary
      *             clusters of data
-     */
+     **/
 
 
     public Iterator<Cluster> iterator(@NotNull final ByteBuffer from) {
@@ -140,11 +140,11 @@ public class SSTable {
         int right = rows - 1;
         while (left <= right) {
             final int mid = left + (right - left) / 2;
-            final int cmp = keyAt(mid).compareTo(from);
+            final int cmp = from.compareTo(keyAt(mid));
             if (cmp < 0) {
-                right = mid + 1;
+                right = mid - 1;
             } else if (cmp > 0) {
-                left = mid - 1;
+                left = mid + 1;
             } else {
                 return mid;
             }

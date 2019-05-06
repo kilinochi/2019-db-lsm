@@ -9,13 +9,14 @@ import ru.mail.polis.Record;
 import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
+import java.nio.file.*;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
-import java.util.Collection;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+
+import static java.nio.file.FileVisitOption.FOLLOW_LINKS;
 
 public class CustomDAO implements DAO {
 
@@ -25,25 +26,31 @@ public class CustomDAO implements DAO {
     private final File directory;
     private final long flushLimit;
     private MemTable memTable;
-    private final Collection<Path> files;
+    private final List<SSTable> ssTables;
     private int generation;
 
     /**
-     * Creates persistence CustomDAO
+     * Creates persistence CustomDAO.
      *
      * @param flushLimit is the limit upon reaching which we write data in disk
      * @param directory is the base directory, where contains our database
-     * @throws IOException of an I/O error occurred*/
+     * @throws IOException of an I/O error occurred
+     **/
 
     public CustomDAO(@NotNull final File directory, final long flushLimit) throws IOException {
         this.directory = directory;
         assert flushLimit >= 0L;
         this.flushLimit = flushLimit;
         memTable = new MemTable();
-        files = new ArrayList<>();
-        Files.walk(directory.toPath(), 1)
-                .filter(path -> path.getFileName().toString().endsWith(SUFFIX_DAT))
-                .forEach(files::add);
+        ssTables = new ArrayList<>();
+        Files.walkFileTree(directory.toPath(), Collections.singleton(FOLLOW_LINKS), 1, new SimpleFileVisitor<>(){
+            @Override
+            public FileVisitResult visitFile(final Path path, final BasicFileAttributes attrs)
+                    throws IOException {
+                    ssTables.add(new SSTable(path.toFile()));
+                    return FileVisitResult.CONTINUE;
+            }
+        });
     }
 
 
@@ -51,8 +58,8 @@ public class CustomDAO implements DAO {
     @Override
     public Iterator<Record> iterator(@NotNull final ByteBuffer from) throws IOException {
         final List<Iterator<Cluster>> iters = new ArrayList<>();
-        for (final Path path : this.files) {
-            iters.add(new SSTable(path.toFile()).iterator(from));
+        for (final SSTable ssTable : this.ssTables) {
+            iters.add(ssTable.iterator(from));
         }
 
         iters.add(memTable.iterator(from));
@@ -90,6 +97,9 @@ public class CustomDAO implements DAO {
 
     @Override
     public void close() throws IOException {
+        if(memTable.size() == 0) {
+            return;
+        }
         flush();
     }
 

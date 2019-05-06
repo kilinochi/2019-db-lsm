@@ -29,10 +29,10 @@ public class MemTable {
     }
 
     /**
-    *insert new Value to storage
+    * Insert new Value to storage.
     * @param key is the label which we can find data
     * @param value is the data
-    */
+    **/
 
     public void upsert(@NotNull final ByteBuffer key, @NotNull final ByteBuffer value) {
         final ClusterValue prev = storage.put(key, ClusterValue.of(value));
@@ -46,7 +46,7 @@ public class MemTable {
     }
 
     /**
-     *delete Value from storage by key
+     *Delete Value from storage by key.
      * @param key is the label which we can find data
      *            and delete data from storage
      */
