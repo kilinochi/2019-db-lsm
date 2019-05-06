@@ -110,7 +110,7 @@ public class SSTable {
     }
 
     /**
-     * Iterator of data from file
+     * Iterator of data from file.
      *
      * @param from is the key, which help to find necessary
      *             clusters of data
