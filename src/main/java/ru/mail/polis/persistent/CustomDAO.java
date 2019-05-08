@@ -55,7 +55,7 @@ public class CustomDAO implements DAO {
             @Override
             public FileVisitResult visitFile(final Path path, final BasicFileAttributes attrs)
                     throws IOException {
-                    Matcher matcher = WATCH_FILE_NAME.matcher(path.toString());
+                    final Matcher matcher = WATCH_FILE_NAME.matcher(path.toString());
                     if(path.toString().endsWith(SUFFIX_DAT) && matcher.find()) {
                         ssTables.add(new SSTable(path.toFile()));
                     }
