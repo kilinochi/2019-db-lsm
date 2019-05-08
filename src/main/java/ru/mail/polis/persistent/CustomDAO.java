@@ -7,25 +7,29 @@ import ru.mail.polis.Iters;
 import ru.mail.polis.Record;
 
 import java.io.File;
-import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.nio.file.FileVisitResult;
 import java.nio.file.StandardCopyOption;
+import java.nio.file.SimpleFileVisitor;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.SimpleFileVisitor;
+import java.nio.file.FileVisitResult;
+import java.nio.file.FileVisitOption;
+import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.EnumSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
-import static java.nio.file.FileVisitOption.FOLLOW_LINKS;
 
 public class CustomDAO implements DAO {
 
     private static final String SUFFIX_DAT = ".dat";
     private static final String SUFFIX_TMP = ".tmp";
+    private static final String FILE_NAME = "SSTable";
+    private static final Pattern WATCH_FILE_NAME = Pattern.compile(FILE_NAME);
 
     private final File directory;
     private final long flushLimit;
@@ -47,11 +51,14 @@ public class CustomDAO implements DAO {
         this.flushLimit = flushLimit;
         memTable = new MemTable();
         ssTables = new ArrayList<>();
-        Files.walkFileTree(directory.toPath(), Collections.singleton(FOLLOW_LINKS), 1, new SimpleFileVisitor<>(){
+        Files.walkFileTree(directory.toPath(), EnumSet.noneOf(FileVisitOption.class), 1, new SimpleFileVisitor<>(){
             @Override
             public FileVisitResult visitFile(final Path path, final BasicFileAttributes attrs)
                     throws IOException {
-                    ssTables.add(new SSTable(path.toFile()));
+                    Matcher matcher = WATCH_FILE_NAME.matcher(path.toString());
+                    if(path.toString().endsWith(SUFFIX_DAT) && matcher.find()) {
+                        ssTables.add(new SSTable(path.toFile()));
+                    }
                     return FileVisitResult.CONTINUE;
             }
         });
@@ -108,9 +115,9 @@ public class CustomDAO implements DAO {
     }
 
     private void flush() throws IOException {
-        final File tmp = new File(directory, generation + SUFFIX_TMP);
+        final File tmp = new File(directory, FILE_NAME + generation + SUFFIX_TMP);
         SSTable.writeToFile(memTable.iterator(ByteBuffer.allocate(0)), tmp);
-        final File dest = new File(directory, generation + SUFFIX_DAT);
+        final File dest = new File(directory, FILE_NAME + generation + SUFFIX_DAT);
         Files.move(tmp.toPath(), dest.toPath(), StandardCopyOption.ATOMIC_MOVE);
         generation = generation + 1;
         memTable = new MemTable();
