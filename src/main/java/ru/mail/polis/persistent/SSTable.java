@@ -19,6 +19,7 @@ public class SSTable {
     private final LongBuffer offsets;
     private final ByteBuffer clusters;
     private final long generation;
+    private final File table;
 
 
     /**
@@ -109,6 +110,7 @@ public class SSTable {
         final ByteBuffer clusterBuffer = mapped.duplicate();
         clusterBuffer.limit(offsetBuffer.position());
         this.clusters = clusterBuffer.slice();
+        this.table = file;
     }
 
     /**
@@ -135,6 +137,10 @@ public class SSTable {
                 return clusterAt(next++);
             }
         };
+    }
+
+    public File getTable() {
+        return table;
     }
 
     private int position(final @NotNull ByteBuffer from) {

@@ -68,6 +68,15 @@ public class MemTable {
         }
     }
 
+    /**
+     * Clear current MemTable.
+     */
+
+    public void clear(){
+        storage.clear();
+        tableSize = 0;
+    }
+
     public long size() {
         return tableSize;
     }

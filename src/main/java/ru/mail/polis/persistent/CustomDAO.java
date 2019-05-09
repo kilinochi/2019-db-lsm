@@ -32,6 +32,7 @@ public class CustomDAO implements DAO {
     private static final Pattern WATCH_FILE_NAME = Pattern.compile(FILE_NAME);
 
     private final File directory;
+    private static final long COMPACT_LIMIT = 16;
     private final long flushLimit;
     private MemTable memTable;
     private final List<SSTable> ssTables;
@@ -70,6 +71,13 @@ public class CustomDAO implements DAO {
     @NotNull
     @Override
     public Iterator<Record> iterator(@NotNull final ByteBuffer from) throws IOException {
+        return Iterators.transform(clusterIterator(from), cluster -> {
+            assert cluster != null;
+            return Record.of(cluster.getKey(), cluster.getClusterValue().getData());
+        });
+    }
+
+    private Iterator <Cluster> clusterIterator(@NotNull final ByteBuffer from) {
         final List<Iterator<Cluster>> iters = new ArrayList<>();
         for (final SSTable ssTable : this.ssTables) {
             iters.add(ssTable.iterator(from));
@@ -86,10 +94,7 @@ public class CustomDAO implements DAO {
                     return !cluster.getClusterValue().isTombstone();
                 }
         );
-        return Iterators.transform(alive, cluster -> {
-            assert cluster != null;
-            return Record.of(cluster.getKey(), cluster.getClusterValue().getData());
-        });
+        return alive;
     }
 
     @Override
@@ -116,12 +121,35 @@ public class CustomDAO implements DAO {
         flush();
     }
 
-    private void flush() throws IOException {
+    @Override
+    public void compact() throws IOException {
+        final Iterator <Cluster> data = clusterIterator(ByteBuffer.allocate(0));
         final File tmp = new File(directory, FILE_NAME + generation + SUFFIX_TMP);
-        SSTable.writeToFile(memTable.iterator(ByteBuffer.allocate(0)), tmp);
-        final File dest = new File(directory, FILE_NAME + generation + SUFFIX_DAT);
+        SSTable.writeToFile(data, tmp);
+        final File dest = new File(directory, FILE_NAME + generation + SUFFIX_TMP);
         Files.move(tmp.toPath(), dest.toPath(), StandardCopyOption.ATOMIC_MOVE);
-        generation++;
-        memTable = new MemTable(generation);
+        ssTables.forEach(ssTable -> {
+            try {
+                Files.delete(ssTable.getTable().toPath());
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        });
+        memTable.clear();
+        generation ++;
+    }
+
+    private void flush() throws IOException {
+        if(ssTables.size() + 1 > COMPACT_LIMIT){
+            compact();
+        }
+        else {
+            final File tmp = new File(directory, FILE_NAME + generation + SUFFIX_TMP);
+            SSTable.writeToFile(memTable.iterator(ByteBuffer.allocate(0)), tmp);
+            final File dest = new File(directory, FILE_NAME + generation + SUFFIX_DAT);
+            Files.move(tmp.toPath(), dest.toPath(), StandardCopyOption.ATOMIC_MOVE);
+            generation++;
+            memTable = new MemTable(generation);
+        }
     }
 }
