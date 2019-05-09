@@ -19,11 +19,11 @@ public final class ClusterValue implements Comparable<ClusterValue> {
     }
 
     public static ClusterValue of(@NotNull final ByteBuffer data) {
-        return new ClusterValue(data, System.nanoTime(), false);
+        return new ClusterValue(data, System.currentTimeMillis(), false);
     }
 
     static ClusterValue deadCluster() {
-        return new ClusterValue(null, System.nanoTime(), true);
+        return new ClusterValue(null, System.currentTimeMillis(), true);
     }
 
     ClusterValue(final ByteBuffer data, final long timestamp, final boolean isDead) {

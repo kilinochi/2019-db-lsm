@@ -12,11 +12,13 @@ import java.util.TreeMap;
 public class MemTable {
 
 
+    private final long generation;
     private final NavigableMap<ByteBuffer, ClusterValue> storage;
     private long tableSize;
 
-    public MemTable() {
+    public MemTable(final long generation) {
         storage = new TreeMap<>();
+        this.generation = generation;
     }
 
     /**
@@ -30,7 +32,7 @@ public class MemTable {
                         .entrySet().iterator(),
                 e -> {
                     assert e != null;
-                    return new Cluster(e.getKey(), e.getValue());
+                    return new Cluster(e.getKey(), e.getValue(), generation);
                 });
     }
 

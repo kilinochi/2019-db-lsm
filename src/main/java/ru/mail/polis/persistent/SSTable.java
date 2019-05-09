@@ -18,6 +18,7 @@ public class SSTable {
     private final int rows;
     private final LongBuffer offsets;
     private final ByteBuffer clusters;
+    private final long generation;
 
 
     /**
@@ -84,7 +85,8 @@ public class SSTable {
      * @param file is the file from which we read data
      **/
 
-    public SSTable(@NotNull final File file) throws IOException {
+    public SSTable(@NotNull final File file, final long generation) throws IOException {
+        this.generation = generation;
         final long fileSize = file.length();
         final ByteBuffer mapped;
         try (
@@ -181,7 +183,7 @@ public class SSTable {
         offset += Long.BYTES;
 
         if (timeStamp < 0) {
-            return new Cluster(key.slice(), new ClusterValue(null, -timeStamp, true));
+            return new Cluster(key.slice(), new ClusterValue(null, -timeStamp, true), generation);
         } else {
             final int valueSize = clusters.getInt((int) offset);
             offset += Integer.BYTES;
@@ -190,7 +192,7 @@ public class SSTable {
             value.limit(value.position() + valueSize)
                     .position((int) offset)
                     .limit((int) (offset + valueSize));
-            return new Cluster(key.slice(), new ClusterValue(value.slice(), timeStamp, false));
+            return new Cluster(key.slice(), new ClusterValue(value.slice(), timeStamp, false), generation);
         }
     }
 }

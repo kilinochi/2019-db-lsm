@@ -28,14 +28,14 @@ public class CustomDAO implements DAO {
 
     private static final String SUFFIX_DAT = ".dat";
     private static final String SUFFIX_TMP = ".tmp";
-    private static final String FILE_NAME = "SSTable";
+    private static final String FILE_NAME = "SSTable_";
     private static final Pattern WATCH_FILE_NAME = Pattern.compile(FILE_NAME);
 
     private final File directory;
     private final long flushLimit;
     private MemTable memTable;
     private final List<SSTable> ssTables;
-    private int generation;
+    private long generation;
 
     /**
      * Creates persistence CustomDAO.
@@ -49,7 +49,6 @@ public class CustomDAO implements DAO {
         this.directory = directory;
         assert flushLimit >= 0L;
         this.flushLimit = flushLimit;
-        memTable = new MemTable();
         ssTables = new ArrayList<>();
         Files.walkFileTree(directory.toPath(), EnumSet.noneOf(FileVisitOption.class), 1, new SimpleFileVisitor<>(){
             @Override
@@ -57,11 +56,14 @@ public class CustomDAO implements DAO {
                     throws IOException {
                     final Matcher matcher = WATCH_FILE_NAME.matcher(path.toString());
                     if(path.toString().endsWith(SUFFIX_DAT) && matcher.find()) {
-                        ssTables.add(new SSTable(path.toFile()));
+                        generation = Generation.getNumericValue(path.toString());
+                        ssTables.add(new SSTable(path.toFile(), generation));
                     }
                     return FileVisitResult.CONTINUE;
             }
         });
+        generation++;
+        memTable = new MemTable(generation);
     }
 
 
@@ -119,7 +121,7 @@ public class CustomDAO implements DAO {
         SSTable.writeToFile(memTable.iterator(ByteBuffer.allocate(0)), tmp);
         final File dest = new File(directory, FILE_NAME + generation + SUFFIX_DAT);
         Files.move(tmp.toPath(), dest.toPath(), StandardCopyOption.ATOMIC_MOVE);
-        generation = generation + 1;
-        memTable = new MemTable();
+        generation++;
+        memTable = new MemTable(generation);
     }
 }
