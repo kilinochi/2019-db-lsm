@@ -5,6 +5,12 @@ import org.jetbrains.annotations.NotNull;
 public final class Generation {
     private Generation(){}
 
+    /**
+     * Get generation by name of table.
+     * @param name is the name of file
+     **/
+
+
     public static long getNumericValue(@NotNull final String name){
         final StringBuilder res = new StringBuilder();
         final String [] tmp0 = name.split("/");

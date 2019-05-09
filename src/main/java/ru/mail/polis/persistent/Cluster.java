@@ -14,9 +14,18 @@ public class Cluster {
 
     private final ByteBuffer key;
     private final ClusterValue clusterValue;
-    private long  generation;
+    private final long  generation;
 
-    public Cluster(@NotNull final ByteBuffer key, @NotNull final ClusterValue clusterValue, long generation) {
+    /**
+     * Cluster is a memory cell in file.
+     *
+     * @param key is the key of this cell by which we can find this Cluster
+     * @param clusterValue is the value in this cell
+     * @param generation is the generation to which cluster is belong
+     **/
+
+
+    public Cluster(@NotNull final ByteBuffer key, @NotNull final ClusterValue clusterValue, final long generation) {
         this.key = key;
         this.clusterValue = clusterValue;
         this.generation = generation;
