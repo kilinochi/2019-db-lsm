@@ -135,8 +135,8 @@ public class CustomDAO implements DAO {
                 e.printStackTrace();
             }
         });
-        memTable.clear();
         generation ++;
+        memTable = new MemTable(generation);
     }
 
     private void flush() throws IOException {
