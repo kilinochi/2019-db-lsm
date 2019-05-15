@@ -11,7 +11,6 @@ import java.util.TreeMap;
 
 public class MemTable {
 
-
     private final long generation;
     private final NavigableMap<ByteBuffer, ClusterValue> storage;
     private long tableSize;
@@ -23,8 +22,8 @@ public class MemTable {
 
     /**
      * Get data as Iterator from in-memory storage by key.
-     * @param from is the label which we can find data
      *
+     * @param from is the label which we can find data
      **/
     final Iterator<Cluster> iterator(@NotNull final ByteBuffer from) {
         return Iterators.transform(storage.tailMap(from)
@@ -36,10 +35,11 @@ public class MemTable {
     }
 
     /**
-    * Insert new Value to storage.
-    * @param key is the label which we can find data
-    * @param value is the data
-    **/
+     * Insert new Value to storage.
+     *
+     * @param key   is the label which we can find data
+     * @param value is the data
+     **/
     void upsert(@NotNull final ByteBuffer key, @NotNull final ByteBuffer value) {
         final ClusterValue prev = storage.put(key, ClusterValue.of(value));
         if (prev == null) {
@@ -52,7 +52,8 @@ public class MemTable {
     }
 
     /**
-     *Delete Value from storage by key.
+     * Delete Value from storage by key.
+     *
      * @param key is the label which we can find data
      *            and delete data from storage
      */

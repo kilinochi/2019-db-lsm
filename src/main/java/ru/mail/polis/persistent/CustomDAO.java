@@ -42,7 +42,7 @@ public class CustomDAO implements DAO {
      * Creates persistence CustomDAO.
      *
      * @param flushLimit is the limit upon reaching which we write data in disk
-     * @param directory is the base directory, where contains our database
+     * @param directory  is the base directory, where contains our database
      * @throws IOException of an I/O error occurred
      **/
     public CustomDAO(@NotNull final File directory, final long flushLimit, final long compactLimit) throws IOException {
@@ -51,23 +51,22 @@ public class CustomDAO implements DAO {
         assert flushLimit >= 0L;
         this.flushLimit = flushLimit;
         ssTables = new ArrayList<>();
-        Files.walkFileTree(directory.toPath(), EnumSet.noneOf(FileVisitOption.class), 1, new SimpleFileVisitor<>(){
+        Files.walkFileTree(directory.toPath(), EnumSet.noneOf(FileVisitOption.class), 1, new SimpleFileVisitor<>() {
             @Override
             public FileVisitResult visitFile(final Path path, final BasicFileAttributes attrs)
                     throws IOException {
-                    final Matcher matcher = WATCH_FILE_NAME.matcher(path.toString());
-                    if(path.toString().endsWith(SUFFIX_DAT) && matcher.find()) {
-                        final long currentGeneration = Generation.fromPath(path);
-                        generation = Math.max(generation, currentGeneration);
-                        ssTables.add(new SSTable(path.toFile(), currentGeneration));
-                    }
-                    return FileVisitResult.CONTINUE;
+                final Matcher matcher = WATCH_FILE_NAME.matcher(path.toString());
+                if (path.toString().endsWith(SUFFIX_DAT) && matcher.find()) {
+                    final long currentGeneration = Generation.fromPath(path);
+                    generation = Math.max(generation, currentGeneration);
+                    ssTables.add(new SSTable(path.toFile(), currentGeneration));
+                }
+                return FileVisitResult.CONTINUE;
             }
         });
         generation++;
         memTable = new MemTable(generation);
     }
-
 
     @NotNull
     @Override
@@ -78,7 +77,7 @@ public class CustomDAO implements DAO {
         });
     }
 
-    private Iterator <Cluster> clusterIterator(@NotNull final ByteBuffer from) {
+    private Iterator<Cluster> clusterIterator(@NotNull final ByteBuffer from) {
         final List<Iterator<Cluster>> iters = new ArrayList<>();
         for (final SSTable ssTable : this.ssTables) {
             iters.add(ssTable.iterator(from));
@@ -101,7 +100,7 @@ public class CustomDAO implements DAO {
     @Override
     public void upsert(@NotNull final ByteBuffer key, @NotNull final ByteBuffer value) throws IOException {
         memTable.upsert(key, value);
-        if(ssTables.size() > compactLimit) {
+        if (ssTables.size() > compactLimit) {
             compact();
         }
         if (memTable.size() >= flushLimit) {
@@ -112,7 +111,7 @@ public class CustomDAO implements DAO {
     @Override
     public void remove(@NotNull final ByteBuffer key) throws IOException {
         memTable.remove(key);
-        if(ssTables.size() > compactLimit) {
+        if (ssTables.size() > compactLimit) {
             compact();
         }
         if (memTable.size() >= flushLimit) {
@@ -122,17 +121,17 @@ public class CustomDAO implements DAO {
 
     @Override
     public void close() throws IOException {
-        if(memTable.size() > 0) {
+        if (memTable.size() > 0) {
             flush();
         }
-        if(ssTables.size() > compactLimit) {
+        if (ssTables.size() > compactLimit) {
             compact();
         }
     }
 
     @Override
     public void compact() throws IOException {
-        final Iterator <Cluster> data = clusterIterator(ByteBuffer.allocate(0));
+        final Iterator<Cluster> data = clusterIterator(ByteBuffer.allocate(0));
         ssTables.forEach(ssTable -> {
             try {
                 Files.delete(ssTable.getTable().toPath());

@@ -21,12 +21,12 @@ public class SSTable {
     private final long generation;
     private final File table;
 
-
     /**
      * Write data as iterator in disk.
+     *
      * @param clusters is the data, which we want to write
-     * @param to is the file in the directory in which we want
-     *           write data
+     * @param to       is the file in the directory in which we want
+     *                 write data
      */
     static void writeToFile(@NotNull final Iterator<Cluster> clusters, @NotNull final File to)
             throws IOException {
@@ -82,6 +82,7 @@ public class SSTable {
 
     /**
      * File mapping from disk.
+     *
      * @param file is the file from which we read data
      **/
     SSTable(@NotNull final File file, final long generation) throws IOException {
@@ -198,4 +199,3 @@ public class SSTable {
         }
     }
 }
-
