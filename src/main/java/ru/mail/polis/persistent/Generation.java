@@ -2,8 +2,25 @@ package ru.mail.polis.persistent;
 
 import org.jetbrains.annotations.NotNull;
 
+import java.io.File;
+import java.nio.file.Path;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 public final class Generation {
     private Generation(){}
+
+
+
+    public static long fromPath(@NotNull final Path path) {
+        return getNumericValue(path.getFileName().toString());
+    }
+
+
+    public static long fromFile(@NotNull final File file) {
+        return getNumericValue(file.getName());
+    }
+
 
     /**
      * Get generation by name of table.
@@ -12,15 +29,11 @@ public final class Generation {
 
 
     public static long getNumericValue(@NotNull final String name){
-        final StringBuilder res = new StringBuilder();
-        final String [] tmp0 = name.split("/");
-        final String tmp1 = tmp0[tmp0.length - 1];
-        for (int i = 0; i < tmp1.length(); i++) {
-            final char tmp = tmp1.charAt(i);
-            if(Character.isDigit(tmp)) {
-                res.append(tmp);
-            }
+        final Pattern rgx = Pattern.compile(CustomDAO.FILE_NAME + "(\\d)" + CustomDAO.SUFFIX_DAT);
+        final Matcher matcher = rgx.matcher(name);
+        if(matcher.find()) {
+            return Long.parseLong(matcher.group(1));
         }
-        return Long.parseLong(res.toString());
+        return -1L;
     }
 }

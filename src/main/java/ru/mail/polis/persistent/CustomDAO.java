@@ -26,16 +26,16 @@ import java.util.regex.Pattern;
 
 public class CustomDAO implements DAO {
 
-    private static final String SUFFIX_DAT = ".dat";
-    private static final String SUFFIX_TMP = ".tmp";
-    private static final String FILE_NAME = "SSTable_";
+    public static final String SUFFIX_DAT = ".dat";
+    public static final String SUFFIX_TMP = ".tmp";
+    public static final String FILE_NAME = "SSTable_";
     private static final Pattern WATCH_FILE_NAME = Pattern.compile(FILE_NAME);
 
     private final File directory;
-    private static final long COMPACT_LIMIT = 16;
+    private static final long COMPACT_LIMIT = 2;
     private final long flushLimit;
     private MemTable memTable;
-    private final List<SSTable> ssTables;
+    private List<SSTable> ssTables;
     private long generation;
 
     /**
@@ -57,7 +57,7 @@ public class CustomDAO implements DAO {
                     throws IOException {
                     final Matcher matcher = WATCH_FILE_NAME.matcher(path.toString());
                     if(path.toString().endsWith(SUFFIX_DAT) && matcher.find()) {
-                        generation = Generation.getNumericValue(path.toString());
+                        generation = Long.max(generation, Generation.fromPath(path));
                         ssTables.add(new SSTable(path.toFile(), generation));
                     }
                     return FileVisitResult.CONTINUE;
@@ -100,6 +100,9 @@ public class CustomDAO implements DAO {
     @Override
     public void upsert(@NotNull final ByteBuffer key, @NotNull final ByteBuffer value) throws IOException {
         memTable.upsert(key, value);
+        if(ssTables.size() > COMPACT_LIMIT) {
+            compact();
+        }
         if (memTable.size() >= flushLimit) {
             flush();
         }
@@ -108,6 +111,9 @@ public class CustomDAO implements DAO {
     @Override
     public void remove(@NotNull final ByteBuffer key) throws IOException {
         memTable.remove(key);
+        if(ssTables.size() > COMPACT_LIMIT) {
+            compact();
+        }
         if (memTable.size() >= flushLimit) {
             flush();
         }
@@ -115,19 +121,14 @@ public class CustomDAO implements DAO {
 
     @Override
     public void close() throws IOException {
-        if(memTable.size() == 0) {
-            return;
+        if(memTable.size() > 0) {
+            flush();
         }
-        flush();
     }
 
     @Override
     public void compact() throws IOException {
         final Iterator <Cluster> data = clusterIterator(ByteBuffer.allocate(0));
-        final File tmp = new File(directory, FILE_NAME + generation + SUFFIX_TMP);
-        SSTable.writeToFile(data, tmp);
-        final File dest = new File(directory, FILE_NAME + generation + SUFFIX_TMP);
-        Files.move(tmp.toPath(), dest.toPath(), StandardCopyOption.ATOMIC_MOVE);
         ssTables.forEach(ssTable -> {
             try {
                 Files.delete(ssTable.getTable().toPath());
@@ -135,21 +136,22 @@ public class CustomDAO implements DAO {
                 e.printStackTrace();
             }
         });
-        generation ++;
+        final File tmp = new File(directory, FILE_NAME + generation + SUFFIX_TMP);
+        SSTable.writeToFile(data, tmp);
+        final File dest = new File(directory, FILE_NAME + generation + SUFFIX_DAT);
+        Path tmpPath = Files.move(tmp.toPath(), dest.toPath(), StandardCopyOption.ATOMIC_MOVE);
+        ssTables = new ArrayList<>();
+        ssTables.add(new SSTable(tmpPath.toFile(), generation));
+        generation++;
         memTable = new MemTable(generation);
     }
 
     private void flush() throws IOException {
-        if(ssTables.size() + 1 > COMPACT_LIMIT){
-            compact();
-        }
-        else {
-            final File tmp = new File(directory, FILE_NAME + generation + SUFFIX_TMP);
-            SSTable.writeToFile(memTable.iterator(ByteBuffer.allocate(0)), tmp);
-            final File dest = new File(directory, FILE_NAME + generation + SUFFIX_DAT);
-            Files.move(tmp.toPath(), dest.toPath(), StandardCopyOption.ATOMIC_MOVE);
-            generation++;
-            memTable = new MemTable(generation);
-        }
+        final File tmp = new File(directory, FILE_NAME + generation + SUFFIX_TMP);
+        SSTable.writeToFile(memTable.iterator(ByteBuffer.allocate(0)), tmp);
+        final File dest = new File(directory, FILE_NAME + generation + SUFFIX_DAT);
+        Files.move(tmp.toPath(), dest.toPath(), StandardCopyOption.ATOMIC_MOVE);
+        generation++;
+        memTable = new MemTable(generation);
     }
 }
