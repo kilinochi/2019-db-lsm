@@ -30,6 +30,7 @@ public class CustomDAO implements DAO {
     private static final String SUFFIX_TMP = ".tmp";
     private static final String FILE_NAME = "SSTable_";
     private static final Pattern WATCH_FILE_NAME = Pattern.compile(FILE_NAME);
+    private static final ByteBuffer SMALLEST_KEY = ByteBuffer.allocate(0);
 
     private final File directory;
     private final long compactLimit;
@@ -104,7 +105,7 @@ public class CustomDAO implements DAO {
             compact();
         }
         if (memTable.size() >= flushLimit) {
-            flush();
+            flush(memTable.iterator(SMALLEST_KEY));
         }
     }
 
@@ -115,14 +116,14 @@ public class CustomDAO implements DAO {
             compact();
         }
         if (memTable.size() >= flushLimit) {
-            flush();
+            flush(memTable.iterator(SMALLEST_KEY));
         }
     }
 
     @Override
     public void close() throws IOException {
         if (memTable.size() > 0) {
-            flush();
+            flush(memTable.iterator(SMALLEST_KEY));
         }
         if (ssTables.size() > compactLimit) {
             compact();
@@ -131,7 +132,7 @@ public class CustomDAO implements DAO {
 
     @Override
     public void compact() throws IOException {
-        final Iterator<Cluster> data = clusterIterator(ByteBuffer.allocate(0));
+        final Iterator<Cluster> data = clusterIterator(SMALLEST_KEY);
         ssTables.forEach(ssTable -> {
             try {
                 Files.delete(ssTable.getTable().toPath());
@@ -139,19 +140,15 @@ public class CustomDAO implements DAO {
                 e.printStackTrace();
             }
         });
-        final File tmp = new File(directory, FILE_NAME + generation + SUFFIX_TMP);
-        SSTable.writeToFile(data, tmp);
-        final File dest = new File(directory, FILE_NAME + generation + SUFFIX_DAT);
-        final Path tmpPath = Files.move(tmp.toPath(), dest.toPath(), StandardCopyOption.ATOMIC_MOVE);
-        ssTables = new ArrayList<>();
-        ssTables.add(new SSTable(tmpPath.toFile(), generation));
-        generation++;
+        flush(data);
         memTable = new MemTable(generation);
+        ssTables = new ArrayList<>();
+        ssTables.add(new SSTable(new File(FILE_NAME + --generation + SUFFIX_DAT), --generation));
     }
 
-    private void flush() throws IOException {
+    private void flush(Iterator <Cluster> data) throws IOException {
         final File tmp = new File(directory, FILE_NAME + generation + SUFFIX_TMP);
-        SSTable.writeToFile(memTable.iterator(ByteBuffer.allocate(0)), tmp);
+        SSTable.writeToFile(data, tmp);
         final File dest = new File(directory, FILE_NAME + generation + SUFFIX_DAT);
         Files.move(tmp.toPath(), dest.toPath(), StandardCopyOption.ATOMIC_MOVE);
         generation++;
