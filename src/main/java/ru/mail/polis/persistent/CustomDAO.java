@@ -32,7 +32,7 @@ public class CustomDAO implements DAO {
     private static final Pattern WATCH_FILE_NAME = Pattern.compile(FILE_NAME);
 
     private final File directory;
-    private long compactLimit = 16;
+    private final long compactLimit;
     private final long flushLimit;
     private MemTable memTable;
     private List<SSTable> ssTables;
@@ -58,7 +58,7 @@ public class CustomDAO implements DAO {
                     throws IOException {
                     final Matcher matcher = WATCH_FILE_NAME.matcher(path.toString());
                     if(path.toString().endsWith(SUFFIX_DAT) && matcher.find()) {
-                        long currentGeneration = Generation.fromPath(path);
+                        final long currentGeneration = Generation.fromPath(path);
                         generation = Math.max(generation, currentGeneration);
                         ssTables.add(new SSTable(path.toFile(), currentGeneration));
                     }
