@@ -133,6 +133,7 @@ public class CustomDAO implements DAO {
     @Override
     public void compact() throws IOException {
         final Iterator<Cluster> data = clusterIterator(SMALLEST_KEY);
+        flush(data);
         ssTables.forEach(ssTable -> {
             try {
                 Files.delete(ssTable.getTable().toPath());
@@ -140,7 +141,6 @@ public class CustomDAO implements DAO {
                 e.printStackTrace();
             }
         });
-        flush(data);
         ssTables = new ArrayList<>();
         ssTables.add(new SSTable(new File(directory, FILE_NAME + --generation + SUFFIX_DAT), --generation));
     }
