@@ -16,13 +16,6 @@ final class Generation {
      * @param name is the name of file
      **/
     private static long getNumericValue(@NotNull final String name){
-        final StringBuilder res = new StringBuilder();
-        for(int i = 0; i < name.length(); i++) {
-            final char c = name.charAt(i);
-            if(Character.isDigit(c)) {
-                res.append(c);
-            }
-        }
-        return Long.parseLong(res.toString());
+        return Long.parseLong(name.split("_")[1].split("\\.")[0]);
     }
 }
