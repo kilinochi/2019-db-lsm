@@ -146,7 +146,7 @@ public class CustomDAO implements DAO {
         ssTables.add(new SSTable(new File(FILE_NAME + --generation + SUFFIX_DAT), --generation));
     }
 
-    private void flush(Iterator <Cluster> data) throws IOException {
+    private void flush(@NotNull final Iterator <Cluster> data) throws IOException {
         final File tmp = new File(directory, FILE_NAME + generation + SUFFIX_TMP);
         SSTable.writeToFile(data, tmp);
         final File dest = new File(directory, FILE_NAME + generation + SUFFIX_DAT);
