@@ -32,7 +32,7 @@ public class CustomDAO implements DAO {
     private static final Pattern WATCH_FILE_NAME = Pattern.compile(FILE_NAME);
 
     private final File directory;
-    private static final long COMPACT_LIMIT = 16;
+    private long compactLimit = 16;
     private final long flushLimit;
     private MemTable memTable;
     private List<SSTable> ssTables;
@@ -46,8 +46,9 @@ public class CustomDAO implements DAO {
      * @throws IOException of an I/O error occurred
      **/
 
-    public CustomDAO(@NotNull final File directory, final long flushLimit) throws IOException {
+    public CustomDAO(@NotNull final File directory, final long flushLimit, final long compactLimit) throws IOException {
         this.directory = directory;
+        this.compactLimit = compactLimit;
         assert flushLimit >= 0L;
         this.flushLimit = flushLimit;
         ssTables = new ArrayList<>();
@@ -57,8 +58,9 @@ public class CustomDAO implements DAO {
                     throws IOException {
                     final Matcher matcher = WATCH_FILE_NAME.matcher(path.toString());
                     if(path.toString().endsWith(SUFFIX_DAT) && matcher.find()) {
-                        generation = Math.max(generation, Generation.fromPath(path));
-                        ssTables.add(new SSTable(path.toFile(), Generation.fromPath(path)));
+                        long currentGeneration = Generation.fromPath(path);
+                        generation = Math.max(generation, currentGeneration);
+                        ssTables.add(new SSTable(path.toFile(), currentGeneration));
                     }
                     return FileVisitResult.CONTINUE;
             }
@@ -100,7 +102,7 @@ public class CustomDAO implements DAO {
     @Override
     public void upsert(@NotNull final ByteBuffer key, @NotNull final ByteBuffer value) throws IOException {
         memTable.upsert(key, value);
-        if(ssTables.size() > COMPACT_LIMIT) {
+        if(ssTables.size() > compactLimit) {
             compact();
         }
         if (memTable.size() >= flushLimit) {
@@ -111,7 +113,7 @@ public class CustomDAO implements DAO {
     @Override
     public void remove(@NotNull final ByteBuffer key) throws IOException {
         memTable.remove(key);
-        if(ssTables.size() > COMPACT_LIMIT) {
+        if(ssTables.size() > compactLimit) {
             compact();
         }
         if (memTable.size() >= flushLimit) {
@@ -124,7 +126,7 @@ public class CustomDAO implements DAO {
         if(memTable.size() > 0) {
             flush();
         }
-        if(ssTables.size() > COMPACT_LIMIT) {
+        if(ssTables.size() > compactLimit) {
             compact();
         }
     }
