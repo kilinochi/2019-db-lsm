@@ -241,7 +241,7 @@ class PersistenceTest extends TestBase {
         final ByteBuffer key = randomKey();
 
         // Overwrite key multiple times
-        final int overwrites = 100;
+        final int overwrites = 200;
         for (int i = 0; i < overwrites; i++) {
             // Overwrite
             final ByteBuffer value = randomValue();
