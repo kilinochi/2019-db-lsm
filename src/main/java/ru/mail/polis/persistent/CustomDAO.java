@@ -139,7 +139,7 @@ public class CustomDAO implements DAO {
         final File tmp = new File(directory, FILE_NAME + generation + SUFFIX_TMP);
         SSTable.writeToFile(data, tmp);
         final File dest = new File(directory, FILE_NAME + generation + SUFFIX_DAT);
-        Path tmpPath = Files.move(tmp.toPath(), dest.toPath(), StandardCopyOption.ATOMIC_MOVE);
+        final Path tmpPath = Files.move(tmp.toPath(), dest.toPath(), StandardCopyOption.ATOMIC_MOVE);
         ssTables = new ArrayList<>();
         ssTables.add(new SSTable(tmpPath.toFile(), generation));
         generation++;
