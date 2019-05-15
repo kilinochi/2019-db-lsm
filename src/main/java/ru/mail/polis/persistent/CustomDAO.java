@@ -141,7 +141,6 @@ public class CustomDAO implements DAO {
             }
         });
         flush(data);
-        memTable = new MemTable(generation);
         ssTables = new ArrayList<>();
         ssTables.add(new SSTable(new File(FILE_NAME + --generation + SUFFIX_DAT), --generation));
     }
