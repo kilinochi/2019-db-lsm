@@ -142,7 +142,7 @@ public class CustomDAO implements DAO {
         });
         flush(data);
         ssTables = new ArrayList<>();
-        ssTables.add(new SSTable(new File(FILE_NAME + --generation + SUFFIX_DAT), --generation));
+        ssTables.add(new SSTable(new File(directory, FILE_NAME + --generation + SUFFIX_DAT), --generation));
     }
 
     private void flush(@NotNull final Iterator <Cluster> data) throws IOException {
