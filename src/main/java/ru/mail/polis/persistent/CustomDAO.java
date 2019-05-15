@@ -45,7 +45,6 @@ public class CustomDAO implements DAO {
      * @param directory is the base directory, where contains our database
      * @throws IOException of an I/O error occurred
      **/
-
     public CustomDAO(@NotNull final File directory, final long flushLimit, final long compactLimit) throws IOException {
         this.directory = directory;
         this.compactLimit = compactLimit;

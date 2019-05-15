@@ -23,8 +23,6 @@ public class Cluster {
      * @param clusterValue is the value in this cell
      * @param generation is the generation to which cluster is belong
      **/
-
-
     public Cluster(@NotNull final ByteBuffer key, @NotNull final ClusterValue clusterValue, final long generation) {
         this.key = key;
         this.clusterValue = clusterValue;

@@ -28,8 +28,7 @@ public class SSTable {
      * @param to is the file in the directory in which we want
      *           write data
      */
-
-    public static void writeToFile(@NotNull final Iterator<Cluster> clusters, @NotNull final File to)
+    static void writeToFile(@NotNull final Iterator<Cluster> clusters, @NotNull final File to)
             throws IOException {
         try (FileChannel fileChannel = FileChannel.open(
                 to.toPath(), StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE)) {
@@ -85,8 +84,7 @@ public class SSTable {
      * File mapping from disk.
      * @param file is the file from which we read data
      **/
-
-    public SSTable(@NotNull final File file, final long generation) throws IOException {
+    SSTable(@NotNull final File file, final long generation) throws IOException {
         this.generation = generation;
         final long fileSize = file.length();
         final ByteBuffer mapped;
@@ -119,8 +117,6 @@ public class SSTable {
      * @param from is the key, which help to find necessary
      *             clusters of data
      **/
-
-
     public Iterator<Cluster> iterator(@NotNull final ByteBuffer from) {
         return new Iterator<Cluster>() {
 
@@ -139,7 +135,7 @@ public class SSTable {
         };
     }
 
-    public File getTable() {
+    File getTable() {
         return table;
     }
 

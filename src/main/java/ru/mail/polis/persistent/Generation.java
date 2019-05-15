@@ -4,12 +4,10 @@ import org.jetbrains.annotations.NotNull;
 
 import java.nio.file.Path;
 
-public final class Generation {
+final class Generation {
     private Generation(){}
 
-
-
-    public static long fromPath(@NotNull final Path path) {
+    static long fromPath(@NotNull final Path path) {
         return getNumericValue(path.getFileName().toString());
     }
 
@@ -17,15 +15,11 @@ public final class Generation {
      * Get generation by name of table.
      * @param name is the name of file
      **/
-
-
     private static long getNumericValue(@NotNull final String name){
         final StringBuilder res = new StringBuilder();
-        final String [] tmp0 = name.split("/");
-        final String tmp1 = tmp0[tmp0.length - 1];
-        for(int i = 0; i < tmp1.length(); i++) {
-            final char c = tmp1.charAt(i);
-            if( c > 47 && c < 58) {
+        for(int i = 0; i < name.length(); i++) {
+            final char c = name.charAt(i);
+            if(Character.isDigit(c)) {
                 res.append(c);
             }
         }

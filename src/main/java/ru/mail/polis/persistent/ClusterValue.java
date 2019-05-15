@@ -10,20 +10,20 @@ public final class ClusterValue implements Comparable<ClusterValue> {
     private final long timestamp;
     private final boolean tombstone;
 
-    long getTimestamp() {
-        return timestamp;
-    }
-
-    ByteBuffer getData() {
-        return data.asReadOnlyBuffer();
-    }
-
     public static ClusterValue of(@NotNull final ByteBuffer data) {
         return new ClusterValue(data, System.currentTimeMillis(), false);
     }
 
     static ClusterValue deadCluster() {
         return new ClusterValue(null, System.currentTimeMillis(), true);
+    }
+
+    long getTimestamp() {
+        return timestamp;
+    }
+
+    ByteBuffer getData() {
+        return data.asReadOnlyBuffer();
     }
 
     ClusterValue(final ByteBuffer data, final long timestamp, final boolean isDead) {

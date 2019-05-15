@@ -26,8 +26,7 @@ public class MemTable {
      * @param from is the label which we can find data
      *
      **/
-
-    public final Iterator<Cluster> iterator(@NotNull final ByteBuffer from) {
+    final Iterator<Cluster> iterator(@NotNull final ByteBuffer from) {
         return Iterators.transform(storage.tailMap(from)
                         .entrySet().iterator(),
                 e -> {
@@ -41,8 +40,7 @@ public class MemTable {
     * @param key is the label which we can find data
     * @param value is the data
     **/
-
-    public void upsert(@NotNull final ByteBuffer key, @NotNull final ByteBuffer value) {
+    void upsert(@NotNull final ByteBuffer key, @NotNull final ByteBuffer value) {
         final ClusterValue prev = storage.put(key, ClusterValue.of(value));
         if (prev == null) {
             tableSize = tableSize + key.remaining() + value.remaining();
@@ -58,8 +56,7 @@ public class MemTable {
      * @param key is the label which we can find data
      *            and delete data from storage
      */
-
-    public void remove(@NotNull final ByteBuffer key) {
+    void remove(@NotNull final ByteBuffer key) {
         final ClusterValue prev = storage.put(key, ClusterValue.deadCluster());
         if (prev == null) {
             tableSize = tableSize + key.remaining();
