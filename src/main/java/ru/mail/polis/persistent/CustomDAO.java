@@ -32,7 +32,7 @@ public class CustomDAO implements DAO {
     private static final Pattern WATCH_FILE_NAME = Pattern.compile(FILE_NAME);
 
     private final File directory;
-    private static final long COMPACT_LIMIT = 2;
+    private static final long COMPACT_LIMIT = 8;
     private final long flushLimit;
     private MemTable memTable;
     private List<SSTable> ssTables;
@@ -123,6 +123,9 @@ public class CustomDAO implements DAO {
     public void close() throws IOException {
         if(memTable.size() > 0) {
             flush();
+        }
+        if(ssTables.size() > COMPACT_LIMIT) {
+            compact();
         }
     }
 
