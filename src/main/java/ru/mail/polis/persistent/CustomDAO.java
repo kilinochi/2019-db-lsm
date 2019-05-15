@@ -26,13 +26,13 @@ import java.util.regex.Pattern;
 
 public class CustomDAO implements DAO {
 
-    public static final String SUFFIX_DAT = ".dat";
-    public static final String SUFFIX_TMP = ".tmp";
-    public static final String FILE_NAME = "SSTable_";
+    private static final String SUFFIX_DAT = ".dat";
+    private static final String SUFFIX_TMP = ".tmp";
+    private static final String FILE_NAME = "SSTable_";
     private static final Pattern WATCH_FILE_NAME = Pattern.compile(FILE_NAME);
 
     private final File directory;
-    private static final long COMPACT_LIMIT = 8;
+    private static final long COMPACT_LIMIT = 16;
     private final long flushLimit;
     private MemTable memTable;
     private List<SSTable> ssTables;
@@ -57,8 +57,8 @@ public class CustomDAO implements DAO {
                     throws IOException {
                     final Matcher matcher = WATCH_FILE_NAME.matcher(path.toString());
                     if(path.toString().endsWith(SUFFIX_DAT) && matcher.find()) {
-                        generation = Long.max(generation, Generation.fromPath(path));
-                        ssTables.add(new SSTable(path.toFile(), generation));
+                        generation = Math.max(generation, Generation.fromPath(path));
+                        ssTables.add(new SSTable(path.toFile(), Generation.fromPath(path)));
                     }
                     return FileVisitResult.CONTINUE;
             }
